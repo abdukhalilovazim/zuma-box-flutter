@@ -80,19 +80,14 @@ class GameController extends ChangeNotifier {
   GameState state = GameState.paused;
   int score = 0;
   int boxesCleared = 0;
-  static const int boxesRequiredToComplete = 10;
+  int ballsSpawned = 0;
+  static const int maxLevelBalls = 30;
 
   // Ticker for game loop
   Ticker? _ticker;
   Duration _lastElapsed = Duration.zero;
 
-  // Intro Animation variables
-  List<Ball> introBalls = [];
-  double introTimer = 0.0;
-  static const double introScaleDuration = 1.0;
-  static const double introLaunchInterval = 0.18;
-  int introLaunchedCount = 0;
-  double introLaunchTimer = 0.0;
+
 
   GameController({required this.storageService}) {
     currentLevelNumber = storageService.getCurrentLevel();
@@ -127,48 +122,31 @@ class GameController extends ChangeNotifier {
     particles.clear();
     tapEffects.clear();
     totalElapsedTime = 0.0;
-    introBalls.clear();
     boxesCleared = 0;
+    ballsSpawned = 10;
     
-    // Prepare Intro state
+    // Prepare Intro state: spawn initial 10 balls queued behind the entrance line
     state = GameState.intro;
-    introTimer = 0.0;
-    introLaunchTimer = 0.0;
-    introLaunchedCount = 0;
     
-    _setupIntroTriangle();
-    notifyListeners();
-  }
-
-  void _setupIntroTriangle() {
-    // Generate 10 balls arranged in a triangle in the center of the canvas (400x700)
-    // Row 1: 1 ball
-    // Row 2: 2 balls
-    // Row 3: 3 balls
-    // Row 4: 4 balls
-    final List<Offset> trianglePositions = [
-      // Row 1
-      const Offset(200, 260),
-      // Row 2
-      const Offset(183, 290), const Offset(217, 290),
-      // Row 3
-      const Offset(166, 320), const Offset(200, 320), const Offset(234, 320),
-      // Row 4
-      const Offset(149, 350), const Offset(183, 350), const Offset(217, 350), const Offset(251, 350),
-    ];
-
-    for (int i = 0; i < trianglePositions.length; i++) {
+    int initialCount = 10;
+    for (int i = 0; i < initialCount; i++) {
       final color = GameConstants.getLevelColor(_random.nextInt(currentLevelConfig.colorCount));
-      final ball = Ball(
-        id: "intro_$i",
+      final id = "init_${i}_${_random.nextInt(1000)}";
+      double dist = -i * GameConstants.ballDiameter;
+      activeBalls.add(Ball(
+        id: id,
         color: color,
-        distance: 0.0,
-        targetDistance: 0.0,
-        visualScale: 0.0, // Start scaled down
-      );
-      ball.currentPos = trianglePositions[i];
-      introBalls.add(ball);
+        distance: dist,
+        targetDistance: dist,
+        visualScale: 1.0,
+      ));
+      // Pre-cache position/angle
+      final posAngle = PathManager.getPositionAtDistance(dist, pathPoints, pathDistances);
+      activeBalls.last.currentPos = posAngle.position;
+      activeBalls.last.currentAngle = posAngle.angle;
     }
+    
+    notifyListeners();
   }
 
   // Starts or resumes the game loop Ticker
@@ -257,6 +235,15 @@ class GameController extends ChangeNotifier {
       _updatePlaying(dt);
     }
 
+    // Ensure box target color is always solvable (contains a color currently present in activeBalls)
+    if (state == GameState.playing && box != null && activeBalls.isNotEmpty) {
+      final activeColors = activeBalls.map((b) => b.color).toSet();
+      if (!activeColors.contains(box!.targetColor)) {
+        // Target color is no longer present, shift target color to a color that is on the path
+        box!.reset(activeColors.first);
+      }
+    }
+
     // 3. Update Flying Balls
     _updateFlyingBalls(dt);
 
@@ -280,56 +267,59 @@ class GameController extends ChangeNotifier {
   }
 
   void _updateIntro(double dt) {
-    introTimer += dt;
+    if (activeBalls.isEmpty) {
+      state = GameState.playing;
+      return;
+    }
 
-    if (introTimer <= introScaleDuration) {
-      // Phase 1: Scale up the bowling pins triangle
-      double progress = (introTimer / introScaleDuration).clamp(0.0, 1.0);
-      for (var ball in introBalls) {
-        ball.visualScale = progress;
-      }
-    } else {
-      // Phase 2: Launch them one by one into the start of the path
-      for (var ball in introBalls) {
-        ball.visualScale = 1.0;
-      }
+    // Move head ball forward along the path rapidly (slither-in train entry)
+    final double introSpeed = 220.0 * currentLevelConfig.speedMultiplier;
+    final head = activeBalls.first;
+    head.targetDistance += introSpeed * dt;
 
-      introLaunchTimer += dt;
-      if (introLaunchedCount < introBalls.length && introLaunchTimer >= introLaunchInterval) {
-        introLaunchTimer = 0.0;
-        final ballToLaunch = introBalls[introLaunchedCount];
-        introLaunchedCount++;
+    // Follow the leader snap logic
+    for (int i = 1; i < activeBalls.length; i++) {
+      activeBalls[i].targetDistance = activeBalls[i - 1].targetDistance - GameConstants.ballDiameter;
+    }
 
-        // Calculate control point for a beautiful arc from triangle to path start
-        final startOffset = ballToLaunch.currentPos;
-        final endOffset = pathPoints.first;
-        final midPoint = (startOffset + endOffset) / 2;
-        // Offset perpendicular to create arc
-        final dir = endOffset - startOffset;
-        final perp = Offset(-dir.dy, dir.dx).normalize() * 80.0;
-        final control = midPoint + perp;
+    // Smoothly interpolate each ball's position
+    for (int i = 0; i < activeBalls.length; i++) {
+      final ball = activeBalls[i];
+      final double diff = ball.targetDistance - ball.distance;
 
-        flyingBalls.add(FlyingBall(
-          id: "intro_launch_${ballToLaunch.id}",
-          color: ballToLaunch.color,
-          startPosition: startOffset,
-          endPosition: endOffset,
-          controlPoint: control,
-          t: 0.0,
-        ));
+      if (diff.abs() < 0.1) {
+        ball.distance = ball.targetDistance;
+      } else {
+        ball.distance += diff * 0.15;
       }
 
-      // If all intro balls have launched and all intro flying balls are completed, start game
-      if (introLaunchedCount >= introBalls.length && flyingBalls.isEmpty) {
-        state = GameState.playing;
-      }
+      final posAngle = PathManager.getPositionAtDistance(ball.distance, pathPoints, pathDistances);
+      ball.currentPos = posAngle.position;
+      ball.currentAngle = posAngle.angle;
+    }
+
+    // When the last ball is completely on the visible path, start playing!
+    if (activeBalls.last.distance >= 0.0) {
+      state = GameState.playing;
     }
   }
 
   void _updatePlaying(double dt) {
     if (activeBalls.isEmpty) {
-      // Spawn the first ball
-      _spawnNewBall(0.0);
+      if (ballsSpawned < maxLevelBalls) {
+        // Spawn the first ball
+        _spawnNewBall(0.0);
+      } else if (flyingBalls.isEmpty) {
+        // LEVEL COMPLETE!
+        state = GameState.levelComplete;
+        _ticker?.stop();
+        storageService.setBestScore(score);
+        // Unlock next level
+        storageService.unlockLevel(currentLevelNumber + 1);
+        _createVictoryConfetti();
+        notifyListeners();
+        return;
+      }
     } else {
       // Move head ball forward along the path
       final double normalSpeed = 35.0 * currentLevelConfig.speedMultiplier;
@@ -369,7 +359,7 @@ class GameController extends ChangeNotifier {
 
       // Spawn a new ball at the tail when the tail ball has moved far enough from the start
       final tail = activeBalls.last;
-      if (tail.distance > GameConstants.ballDiameter) {
+      if (tail.distance > GameConstants.ballDiameter && ballsSpawned < maxLevelBalls) {
         _spawnNewBall(tail.targetDistance - GameConstants.ballDiameter);
       }
 
@@ -383,6 +373,8 @@ class GameController extends ChangeNotifier {
   }
 
   void _spawnNewBall(double targetDist) {
+    if (ballsSpawned >= maxLevelBalls) return;
+    ballsSpawned++;
     final id = DateTime.now().microsecondsSinceEpoch.toString() + "_${_random.nextInt(100)}";
     final color = _getRandomActiveColor();
     activeBalls.add(Ball(
@@ -461,22 +453,12 @@ class GameController extends ChangeNotifier {
       _createBoxClearParticles(box!.position, ball.color);
       HapticFeedback.heavyImpact();
 
-      if (boxesCleared >= boxesRequiredToComplete) {
-        // LEVEL COMPLETE!
-        state = GameState.levelComplete;
-        _ticker?.stop();
-        storageService.setBestScore(score);
-        // Unlock next level
-        storageService.unlockLevel(currentLevelNumber + 1);
-        _createVictoryConfetti();
-      } else {
-        // Reset Box with a new target color
-        final newColor = _getRandomActiveColor();
-        box!.reset(newColor);
-      }
+      // Reset Box with a new target color
+      final newColor = _getRandomActiveColor();
+      box!.reset(newColor);
     } else {
       // Normal hit: spark burst
-      _createHitSparks(box!.position, ball.color);
+      _createHitSparks(ball.endPosition, ball.color);
       HapticFeedback.mediumImpact();
     }
   }
@@ -514,7 +496,9 @@ class GameController extends ChangeNotifier {
         // CREATE FLYING BALL
         // Curve path: midpoint + perpendicular displacement
         final startPos = tappedBall.currentPos;
-        final endPos = box!.position;
+        double slotSpacing = 36.0;
+        double startX = box!.position.dx - ((box!.requiredCount - 1) * slotSpacing) / 2;
+        final endPos = Offset(startX + (box!.currentCount * slotSpacing), box!.position.dy);
         final mid = (startPos + endPos) / 2;
         final dir = endPos - startPos;
         // Generate a random curve height offset to the left or right

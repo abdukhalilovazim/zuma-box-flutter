@@ -77,9 +77,15 @@ class PathManager {
     if (path.isEmpty) return PositionAngle(Offset.zero, 0.0);
     double totalLength = cumulativeDistances.last;
 
-    // Clamp distance
+    // Clamp or extrapolate distance
     if (distance <= 0) {
       Offset dir = path.length > 1 ? (path[1] - path[0]) : Offset.zero;
+      double len = dir.distance;
+      if (len > 0.0) {
+        Offset normDir = dir / len;
+        // Since distance is negative or zero, this offsets backwards along the entry tangent
+        return PositionAngle(path.first + normDir * distance, dir.direction);
+      }
       return PositionAngle(path.first, dir.direction);
     }
     if (distance >= totalLength) {

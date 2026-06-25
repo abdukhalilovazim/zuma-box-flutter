@@ -6,7 +6,7 @@ class GameConstants {
   static const double logicalHeight = 700.0;
 
   // Ball dimensions
-  static const double ballRadius = 15.0;
+  static const double ballRadius = 19.0;
   static const double ballDiameter = ballRadius * 2;
 
   // Color Palette (Minimalist Matte Premium)

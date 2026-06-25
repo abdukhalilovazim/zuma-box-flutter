@@ -12,16 +12,18 @@ class GamePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.width == 0 || size.height == 0) return;
 
+    // Scale canvas to translate logical coordinates (400x700) to actual canvas dimensions
+    final double scale = size.width / GameConstants.logicalWidth;
+    canvas.save();
+    canvas.scale(scale);
+
     // 1. Draw Nebulae & Scrolling Starfield Background
-    _drawCosmicBackground(canvas, size);
+    _drawCosmicBackground(canvas, const Size(GameConstants.logicalWidth, GameConstants.logicalHeight));
 
     // 2. Draw Spline Path (Neon Dotted Guide Track)
     _drawPathTrack(canvas);
 
-    // 3. Draw Intro Balls (Bowling Pins Triangle)
-    if (controller.state == GameState.intro) {
-      _drawIntroBalls(canvas);
-    }
+
 
     // 4. Draw Active Ball Chain (with wrong-tap shake displacements)
     _drawActiveBalls(canvas);
@@ -37,6 +39,8 @@ class GamePainter extends CustomPainter {
 
     // 8. Draw Particle Effects (Sparks & Confetti)
     _drawParticles(canvas);
+
+    canvas.restore();
   }
 
   void _drawCosmicBackground(Canvas canvas, Size size) {
@@ -87,37 +91,28 @@ class GamePainter extends CustomPainter {
     double pulse = 0.6 + 0.4 * sin(controller.totalElapsedTime * 7.0);
     double warningAlpha = warningIntensity * pulse;
 
-    Color dashColor = const Color(0xFF252538); // Matte low-contrast track
+    Color lineColor = Colors.white.withOpacity(0.15); // Normal visible matte track
     if (warningAlpha > 0.0) {
-      dashColor = Color.lerp(
-        const Color(0xFF252538),
-        GameConstants.neonRed.withOpacity(0.85),
+      lineColor = Color.lerp(
+        Colors.white.withOpacity(0.15),
+        GameConstants.neonRed.withOpacity(0.65),
         warningAlpha,
       )!;
     }
 
-    final dashPaint = Paint()
-      ..color = dashColor
+    final linePaint = Paint()
+      ..color = lineColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
+      ..strokeWidth = 4.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
-    // Draw clean matte dashed spline path
-    for (int i = 0; i < controller.pathPoints.length - 2; i += 6) {
-      canvas.drawLine(
-        controller.pathPoints[i],
-        controller.pathPoints[i + 2],
-        dashPaint,
-      );
+    final path = Path();
+    path.moveTo(controller.pathPoints.first.dx, controller.pathPoints.first.dy);
+    for (int i = 1; i < controller.pathPoints.length; i++) {
+      path.lineTo(controller.pathPoints[i].dx, controller.pathPoints[i].dy);
     }
-  }
-
-  void _drawIntroBalls(Canvas canvas) {
-    for (var ball in controller.introBalls) {
-      if (ball.visualScale > 0.0) {
-        _draw3DBall(canvas, ball.currentPos, ball.color, ball.visualScale);
-      }
-    }
+    canvas.drawPath(path, linePaint);
   }
 
   void _drawActiveBalls(Canvas canvas) {
@@ -173,10 +168,12 @@ class GamePainter extends CustomPainter {
     final box = controller.box;
     if (box == null) return;
 
-    // Premium rounded square card box (minimalist matte card)
-    double cardSize = 58.0 * box.bounceScale;
-    final cardRect = Rect.fromCenter(center: box.position, width: cardSize, height: cardSize);
-    final cardRRect = RRect.fromRectAndRadius(cardRect, const Radius.circular(12.0));
+    // Egg-carton style container box holding slots horizontally
+    double slotSpacing = 36.0 * box.bounceScale;
+    double boxWidth = ((box.requiredCount - 1) * slotSpacing + 46.0);
+    double boxHeight = 48.0 * box.bounceScale;
+    final cardRect = Rect.fromCenter(center: box.position, width: boxWidth, height: boxHeight);
+    final cardRRect = RRect.fromRectAndRadius(cardRect, const Radius.circular(14.0));
 
     // 1. Draw subtle soft drop shadow behind the box card
     final shadowPaint = Paint()
@@ -188,39 +185,45 @@ class GamePainter extends CustomPainter {
     final cardBgPaint = Paint()..color = const Color(0xFF1E1E2E).withOpacity(0.92);
     canvas.drawRRect(cardRRect, cardBgPaint);
 
-    // Subtle matte card border outline
+    // Card border outline (thick and highly visible target color indicator)
     final cardBorderPaint = Paint()
-      ..color = const Color(0xFF2E2E42)
+      ..color = box.targetColor.withOpacity(0.85)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
+      ..strokeWidth = 2.5;
     canvas.drawRRect(cardRRect, cardBorderPaint);
 
-    // 3. Current accepted color shown as a solid filled inner circle (no pulse or rotation)
-    final indicatorPaint = Paint()..color = box.targetColor;
-    canvas.drawCircle(box.position, 14.0 * box.bounceScale, indicatorPaint);
-
-    // 4. Counter shown as small dots below the box card
-    double startX = box.position.dx - ((box.requiredCount - 1) * 12.0) / 2;
-    double dotsY = box.position.dy + 38.0;
+    // 3. Draw egg-box slots/cups inside the card
+    double startX = box.position.dx - ((box.requiredCount - 1) * slotSpacing) / 2;
     for (int i = 0; i < box.requiredCount; i++) {
-      Offset dotPos = Offset(startX + (i * 12.0), dotsY);
+      Offset slotPos = Offset(startX + (i * slotSpacing), box.position.dy);
       bool isFilled = i < box.currentCount;
 
-      final dotPaint = Paint()
-        ..color = isFilled ? box.targetColor : const Color(0xFF2A2A3D)
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(dotPos, 4.0, dotPaint);
+      if (isFilled) {
+        // Draw the 3D-looking matte ball of the target color sitting inside the cup!
+        _draw3DBall(canvas, slotPos, box.targetColor, 0.74 * box.bounceScale);
+      } else {
+        // Draw empty egg carton cup pocket (concave depth)
+        final cupBgPaint = Paint()
+          ..color = const Color(0xFF0F0F1A)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(slotPos, 12.0 * box.bounceScale, cupBgPaint);
 
-      if (!isFilled) {
-        final outlinePaint = Paint()
-          ..color = Colors.white.withOpacity(0.08)
+        // Highlight ring of the cup pocket: colored to target color
+        final cupRingPaint = Paint()
+          ..color = box.targetColor.withOpacity(0.35)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.0;
-        canvas.drawCircle(dotPos, 4.0, outlinePaint);
+          ..strokeWidth = 1.2;
+        canvas.drawCircle(slotPos, 12.0 * box.bounceScale, cupRingPaint);
+
+        // Small indicator dot inside the empty cup: bright solid target color
+        final cupDotPaint = Paint()
+          ..color = box.targetColor.withOpacity(0.85)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(slotPos, 4.5 * box.bounceScale, cupDotPaint);
       }
     }
 
-    // 5. Clean white flash overlay on complete/land
+    // 4. Clean white flash overlay on complete/land
     if (box.explosionOpacity > 0.0) {
       final flashPaint = Paint()
         ..color = Colors.white.withOpacity(box.explosionOpacity.clamp(0.0, 1.0))
