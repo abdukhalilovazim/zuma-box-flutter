@@ -58,6 +58,51 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
             },
           ),
 
+          // Language Selector at Top Right
+          Positioned(
+            top: 20.0,
+            right: 20.0,
+            child: SafeArea(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(20.0),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.1),
+                    width: 1.0,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: ["UZ", "RU", "EN"].map((lang) {
+                    final isSelected = controller.currentLanguage == lang.toLowerCase();
+                    return GestureDetector(
+                      onTap: () {
+                        controller.setLanguage(lang.toLowerCase());
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                        decoration: BoxDecoration(
+                          color: isSelected ? GameConstants.neonText : Colors.transparent,
+                          borderRadius: BorderRadius.circular(14.0),
+                        ),
+                        child: Text(
+                          lang,
+                          style: TextStyle(
+                            color: isSelected ? const Color(0xFF12121F) : Colors.white70,
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ),
+
           // 2. Menu Content
           SafeArea(
             child: Column(
@@ -126,7 +171,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                       const Icon(Icons.emoji_events_rounded, color: Colors.amberAccent, size: 18),
                       const SizedBox(width: 8),
                       Text(
-                        "BEST SCORE: $bestScore",
+                        "${controller.translate('best_score')}: $bestScore",
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 13.0,
@@ -157,9 +202,9 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                 const Spacer(flex: 1),
 
                 // Level Select Section
-                const Text(
-                  "SELECT LEVEL",
-                  style: TextStyle(
+                Text(
+                  controller.translate('select_level'),
+                  style: const TextStyle(
                     color: Colors.white38,
                     fontSize: 11.0,
                     fontWeight: FontWeight.bold,
@@ -333,10 +378,10 @@ class _MenuPlayButtonState extends State<MenuPlayButton> with SingleTickerProvid
                   )
                 ],
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
-                  "START GAME",
-                  style: TextStyle(
+                  Provider.of<GameController>(context).translate("start_game"),
+                  style: const TextStyle(
                     color: Color(0xFF12121F),
                     fontSize: 18.0,
                     fontWeight: FontWeight.bold,

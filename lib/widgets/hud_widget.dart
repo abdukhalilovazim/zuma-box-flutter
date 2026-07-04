@@ -55,7 +55,7 @@ class HudWidget extends StatelessWidget {
                         // Level Info
                         Expanded(
                           child: Text(
-                            "LEVEL ${controller.currentLevelNumber}  •  ${(controller.maxLevelBalls - controller.ballsSpawned).clamp(0, controller.maxLevelBalls)} LEFT",
+                            "${controller.translate('level')} ${controller.currentLevelNumber}  •  ${(controller.maxLevelBalls - controller.ballsSpawned).clamp(0, controller.maxLevelBalls)} ${controller.translate('left')}",
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 14.0,
@@ -108,23 +108,23 @@ class HudWidget extends StatelessWidget {
         if (controller.state == GameState.paused)
           _buildScreenOverlay(
             context: context,
-            title: "PAUSED",
+            title: controller.translate('paused'),
             titleColor: GameConstants.neonText,
             content: [
               _buildNeonButton(
-                text: "RESUME",
+                text: controller.translate('resume'),
                 onPressed: () => controller.resumeGame(),
                 color: GameConstants.neonText,
               ),
               const SizedBox(height: 15.0),
               _buildNeonButton(
-                text: "RESTART",
+                text: controller.translate('restart'),
                 onPressed: () => controller.restartLevel(),
                 color: GameConstants.neonYellow,
               ),
               const SizedBox(height: 15.0),
               _buildNeonButton(
-                text: "MAIN MENU",
+                text: controller.translate('main_menu'),
                 onPressed: () {
                   controller.pauseGame();
                   Navigator.of(context).pop();
@@ -156,20 +156,20 @@ class HudWidget extends StatelessWidget {
               _buildScreenOverlay(
                 context: context,
                 isGameOver: true,
-                title: "GAME OVER",
+                title: controller.translate('game_over'),
                 titleColor: GameConstants.neonRed,
                 score: controller.score,
                 content: [
                   PulsingButton(
                     onPressed: () => controller.restartLevel(),
                     child: _buildNeonButtonRaw(
-                      text: "TRY AGAIN",
+                      text: controller.translate('try_again'),
                       color: GameConstants.neonRed,
                     ),
                   ),
                   const SizedBox(height: 15.0),
                   _buildNeonButton(
-                    text: "MAIN MENU",
+                    text: controller.translate('main_menu'),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
@@ -185,7 +185,7 @@ class HudWidget extends StatelessWidget {
           _buildScreenOverlay(
             context: context,
             isLevelComplete: true,
-            title: "LEVEL COMPLETE",
+            title: controller.translate('level_complete'),
             titleColor: GameConstants.neonGreen,
             score: controller.score,
             content: [
@@ -195,17 +195,17 @@ class HudWidget extends StatelessWidget {
                 PulsingButton(
                   onPressed: () => controller.startLevel(controller.currentLevelNumber + 1),
                   child: _buildNeonButtonRaw(
-                    text: "NEXT LEVEL",
+                    text: controller.translate('next_level'),
                     color: GameConstants.neonGreen,
                   ),
                 )
               else
                 Column(
                   children: [
-                    const Text(
-                      "YOU CLEARED ALL LEVELS!",
+                    Text(
+                      controller.translate('all_cleared'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.amberAccent,
                         fontSize: 16.0,
                         fontWeight: FontWeight.bold,
@@ -217,7 +217,7 @@ class HudWidget extends StatelessWidget {
                 ),
               const SizedBox(height: 15.0),
               _buildNeonButton(
-                text: "MAIN MENU",
+                text: controller.translate('main_menu'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -295,9 +295,9 @@ class HudWidget extends StatelessWidget {
                 ),
               const SizedBox(height: 12.0),
               if (score != null) ...[
-                const Text(
-                  "FINAL SCORE",
-                  style: TextStyle(
+                Text(
+                  Provider.of<GameController>(context, listen: false).translate('final_score'),
+                  style: const TextStyle(
                     color: Colors.white38,
                     fontSize: 11.0,
                     fontWeight: FontWeight.bold,
@@ -454,7 +454,7 @@ class _ScoreTextState extends State<ScoreText> with TickerProviderStateMixin {
         ScaleTransition(
           scale: _animation,
           child: Text(
-            "SCORE: ${widget.score}",
+            "${Provider.of<GameController>(context).translate('score')}: ${widget.score}",
             textAlign: TextAlign.right,
             style: const TextStyle(
               color: Colors.white,
