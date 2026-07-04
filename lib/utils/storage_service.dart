@@ -4,6 +4,7 @@ class StorageService {
   static const String _keyCurrentLevel = "current_level";
   static const String _keyBestScore = "best_score";
   static const String _keyUnlockedLevels = "unlocked_levels";
+  static const String _keyCompletedLevels = "completed_levels";
 
   final SharedPreferences _prefs;
 
@@ -50,9 +51,27 @@ class StorageService {
     }
   }
 
+  List<int> getCompletedLevels() {
+    final list = _prefs.getStringList(_keyCompletedLevels);
+    if (list == null) return [];
+    return list.map((e) => int.tryParse(e) ?? 1).toList();
+  }
+
+  Future<void> completeLevel(int level) async {
+    final levels = getCompletedLevels();
+    if (!levels.contains(level)) {
+      levels.add(level);
+      await _prefs.setStringList(
+        _keyCompletedLevels,
+        levels.map((e) => e.toString()).toList(),
+      );
+    }
+  }
+
   Future<void> resetProgress() async {
     await _prefs.setInt(_keyCurrentLevel, 1);
     await _prefs.setInt(_keyBestScore, 0);
     await _prefs.setStringList(_keyUnlockedLevels, ["1"]);
+    await _prefs.setStringList(_keyCompletedLevels, []);
   }
 }

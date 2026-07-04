@@ -181,7 +181,7 @@ class GameController extends ChangeNotifier {
       position: currentLevelConfig.scaledBoxPosition,
     );
     
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   // Starts or resumes the game loop Ticker
@@ -193,19 +193,19 @@ class GameController extends ChangeNotifier {
     if (state == GameState.paused) {
       state = GameState.playing;
     }
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   void pauseGame() {
     state = GameState.paused;
     _ticker?.stop();
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   void resumeGame() {
     state = GameState.playing;
     _ticker?.start();
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   void restartLevel() {
@@ -298,7 +298,7 @@ class GameController extends ChangeNotifier {
       }
     }
 
-    notifyListeners();
+    _safeNotifyListeners();
   }
 
   void _updateIntro(double dt) {
@@ -351,8 +351,9 @@ class GameController extends ChangeNotifier {
         storageService.setBestScore(score);
         // Unlock next level
         storageService.unlockLevel(currentLevelNumber + 1);
+        storageService.completeLevel(currentLevelNumber);
         _createVictoryConfetti();
-        notifyListeners();
+        _safeNotifyListeners();
         return;
       }
     } else {
@@ -684,6 +685,14 @@ class GameController extends ChangeNotifier {
         maxLife: 2.0 + _random.nextDouble() * 1.5,
         isConfetti: true,
       ));
+    }
+  }
+
+  void _safeNotifyListeners() {
+    if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) => notifyListeners());
+    } else {
+      notifyListeners();
     }
   }
 }
