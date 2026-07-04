@@ -150,12 +150,12 @@ class GameController extends ChangeNotifier {
     tapEffects.clear();
     totalElapsedTime = 0.0;
     boxesCleared = 0;
-    ballsSpawned = 10;
+    final int initialCount = min(15, maxLevelBalls);
+    ballsSpawned = initialCount;
     
-    // Prepare Intro state: spawn initial 10 balls queued behind the entrance line from color pool
+    // Prepare Intro state: spawn initial balls queued behind the entrance line from color pool
     state = GameState.intro;
     
-    int initialCount = 10;
     for (int i = 0; i < initialCount; i++) {
       final color = levelColorPool[colorPoolIndex++];
       final id = "init_${i}_${_random.nextInt(1000)}";
@@ -457,12 +457,27 @@ class GameController extends ChangeNotifier {
 
     for (var color in activeColors) {
       if (_isColorValidForBox(color, currentCount: currentCount, remainingDemand: remainingDemand)) {
-        validColors.add(color);
+        int activeCount = activeBalls.where((b) => b.color == color).length;
+        if (activeCount >= remainingDemand) {
+          validColors.add(color);
+        }
       }
     }
 
     if (validColors.isNotEmpty) {
       return validColors[_random.nextInt(validColors.length)];
+    }
+
+    // Fallback: If no color has enough balls on screen, pick any valid color
+    List<Color> fallbackColors = [];
+    for (var color in activeColors) {
+      if (_isColorValidForBox(color, currentCount: currentCount, remainingDemand: remainingDemand)) {
+        fallbackColors.add(color);
+      }
+    }
+
+    if (fallbackColors.isNotEmpty) {
+      return fallbackColors[_random.nextInt(fallbackColors.length)];
     }
 
     return activeColors[_random.nextInt(activeColors.length)];
