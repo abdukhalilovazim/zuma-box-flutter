@@ -191,7 +191,7 @@ class HudWidget extends StatelessWidget {
             content: [
               AnimatedStars(count: starsCount),
               const SizedBox(height: 24.0),
-              if (controller.currentLevelNumber < 5)
+              if (controller.currentLevelNumber < 30)
                 PulsingButton(
                   onPressed: () => controller.startLevel(controller.currentLevelNumber + 1),
                   child: _buildNeonButtonRaw(
