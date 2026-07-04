@@ -214,99 +214,108 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                 const SizedBox(height: 16.0),
 
                 // Level Grid
-                Padding(
+                Container(
+                  height: 140.0,
                   padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(5, (index) {
-                      final levelNum = index + 1;
-                      final isUnlocked = unlockedLevels.contains(levelNum);
-                      final levelColor = GameConstants.getLevelColor(index);
+                  child: ScrollConfiguration(
+                    behavior: const ScrollBehavior().copyWith(overscroll: false),
+                    child: GridView.builder(
+                      physics: const BouncingScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 5,
+                        mainAxisSpacing: 12.0,
+                        crossAxisSpacing: 12.0,
+                        childAspectRatio: 1.0,
+                      ),
+                      itemCount: 30,
+                      itemBuilder: (context, index) {
+                        final levelNum = index + 1;
+                        final isUnlocked = unlockedLevels.contains(levelNum);
+                        final levelColor = GameConstants.getLevelColor(index % 5);
 
-                      final isCompleted = completedLevels.contains(levelNum);
+                        final isCompleted = completedLevels.contains(levelNum);
 
-                      return GestureDetector(
-                        onTap: isUnlocked
-                            ? () {
-                                controller.startLevel(levelNum);
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (_) => const GameScreen()),
-                                );
-                              }
-                            : null,
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
-                              width: 52.0,
-                              height: 52.0,
-                              decoration: BoxDecoration(
-                                color: isUnlocked ? GameConstants.cardBg : Colors.black38,
-                                borderRadius: BorderRadius.circular(15.0),
-                                border: Border.all(
-                                  color: isCompleted
-                                      ? GameConstants.neonGreen.withOpacity(0.85)
-                                      : (isUnlocked
-                                          ? const Color(0xFF2C2C3E)
-                                          : Colors.white10),
-                                  width: isCompleted ? 2.0 : 1.5,
+                        return GestureDetector(
+                          onTap: isUnlocked
+                              ? () {
+                                  controller.startLevel(levelNum);
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const GameScreen()),
+                                  );
+                                }
+                              : null,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: isUnlocked ? GameConstants.cardBg : Colors.black38,
+                                  borderRadius: BorderRadius.circular(15.0),
+                                  border: Border.all(
+                                    color: isCompleted
+                                        ? GameConstants.neonGreen.withOpacity(0.85)
+                                        : (isUnlocked
+                                            ? const Color(0xFF2C2C3E)
+                                            : Colors.white10),
+                                    width: isCompleted ? 2.0 : 1.5,
+                                  ),
+                                  boxShadow: isUnlocked
+                                      ? [
+                                          BoxShadow(
+                                            color: isCompleted
+                                                ? GameConstants.neonGreen.withOpacity(0.2)
+                                                : Colors.black.withOpacity(0.15),
+                                            blurRadius: 6.0,
+                                            offset: const Offset(0.0, 2.0),
+                                          )
+                                        ]
+                                      : [],
                                 ),
-                                boxShadow: isUnlocked
-                                    ? [
-                                        BoxShadow(
-                                          color: isCompleted
-                                              ? GameConstants.neonGreen.withOpacity(0.2)
-                                              : Colors.black.withOpacity(0.15),
-                                          blurRadius: 6.0,
-                                          offset: const Offset(0.0, 2.0),
+                                child: Center(
+                                  child: isUnlocked
+                                      ? Text(
+                                          "$levelNum",
+                                          style: TextStyle(
+                                            color: isCompleted ? GameConstants.neonGreen : levelColor,
+                                            fontSize: 18.0,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         )
-                                      ]
-                                    : [],
-                              ),
-                              child: Center(
-                                child: isUnlocked
-                                    ? Text(
-                                        "$levelNum",
-                                        style: TextStyle(
-                                          color: isCompleted ? GameConstants.neonGreen : levelColor,
-                                          fontSize: 19.0,
-                                          fontWeight: FontWeight.bold,
+                                      : const Icon(
+                                          Icons.lock_rounded,
+                                          color: Colors.white24,
+                                          size: 18.0,
                                         ),
-                                      )
-                                    : const Icon(
-                                        Icons.lock_rounded,
-                                        color: Colors.white24,
-                                        size: 18.0,
-                                      ),
-                              ),
-                            ),
-                            if (isCompleted)
-                              Positioned(
-                                top: -6.0,
-                                right: -6.0,
-                                child: Container(
-                                  padding: const EdgeInsets.all(2.0),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.amber,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black26,
-                                        blurRadius: 4.0,
-                                      )
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.star_rounded,
-                                    color: Colors.white,
-                                    size: 12.0,
-                                  ),
                                 ),
                               ),
-                          ],
-                        ),
-                      );
-                    }),
+                              if (isCompleted)
+                                Positioned(
+                                  top: -4.0,
+                                  right: -4.0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(1.5),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.amber,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black26,
+                                          blurRadius: 4.0,
+                                        )
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.star_rounded,
+                                      color: Colors.white,
+                                      size: 10.0,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
 
