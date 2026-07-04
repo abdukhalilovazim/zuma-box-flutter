@@ -55,7 +55,7 @@ class HudWidget extends StatelessWidget {
                         // Level Info
                         Expanded(
                           child: Text(
-                            "LEVEL ${controller.currentLevelNumber}  •  ${(GameController.maxLevelBalls - controller.ballsSpawned).clamp(0, GameController.maxLevelBalls)} LEFT",
+                            "LEVEL ${controller.currentLevelNumber}  •  ${(controller.maxLevelBalls - controller.ballsSpawned).clamp(0, controller.maxLevelBalls)} LEFT",
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 14.0,

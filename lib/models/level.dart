@@ -20,6 +20,33 @@ class LevelConfig {
     required this.colorCount,
   });
 
+  // Scaling getters to safely map coordinates inside [60, 340] for X and [140, 600] for Y
+  List<Waypoint> get scaledControlPoints {
+    return controlPoints.map((w) {
+      // Map x from original range [40, 360] to [60, 340]
+      double newX = 60.0 + (w.dx - 40.0) * (340.0 - 60.0) / (360.0 - 40.0);
+      newX = newX.clamp(60.0, 340.0);
+
+      // Map y from original range [80, 660] to [140, 600]
+      double newY = 140.0 + (w.dy - 80.0) * (600.0 - 140.0) / (660.0 - 80.0);
+      newY = newY.clamp(140.0, 600.0);
+
+      return Waypoint(newX, newY);
+    }).toList();
+  }
+
+  Offset get scaledBoxPosition {
+    // Map x from original range [40, 360] to [60, 340]
+    double newX = 60.0 + (boxPosition.dx - 40.0) * (340.0 - 60.0) / (360.0 - 40.0);
+    newX = newX.clamp(60.0, 340.0);
+
+    // Map y from original range [80, 660] to [140, 600]
+    double newY = 140.0 + (boxPosition.dy - 80.0) * (600.0 - 140.0) / (660.0 - 80.0);
+    newY = newY.clamp(140.0, 600.0);
+
+    return Offset(newX, newY);
+  }
+
   // Pre-configured levels with gorgeous spiral trajectories
   static List<LevelConfig> get defaultLevels => [
     LevelConfig(

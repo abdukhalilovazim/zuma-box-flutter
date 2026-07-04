@@ -81,7 +81,9 @@ class GameController extends ChangeNotifier {
   int score = 0;
   int boxesCleared = 0;
   int ballsSpawned = 0;
-  static const int maxLevelBalls = 30;
+  List<Color> levelColorPool = [];
+  int colorPoolIndex = 0;
+  int get maxLevelBalls => levelColorPool.length;
 
   // Ticker for game loop
   Ticker? _ticker;
@@ -95,6 +97,36 @@ class GameController extends ChangeNotifier {
     _loadLevel(currentLevelNumber);
   }
 
+  void _generateLevelColorPool() {
+    levelColorPool.clear();
+    colorPoolIndex = 0;
+
+    final boxDemand = currentLevelConfig.boxDemand;
+    final colorCount = currentLevelConfig.colorCount;
+
+    // Calculate max level balls closest to 30 that is a multiple of boxDemand
+    final maxBalls = (30 ~/ boxDemand) * boxDemand;
+
+    int totalGroups = maxBalls ~/ boxDemand;
+    List<int> groupsPerColor = List.filled(colorCount, 0);
+
+    for (int i = 0; i < totalGroups; i++) {
+      groupsPerColor[i % colorCount]++;
+    }
+
+    List<Color> colorsToShuffle = [];
+    for (int i = 0; i < colorCount; i++) {
+      final color = GameConstants.getLevelColor(i);
+      final count = groupsPerColor[i] * boxDemand;
+      for (int c = 0; c < count; c++) {
+        colorsToShuffle.add(color);
+      }
+    }
+
+    colorsToShuffle.shuffle(_random);
+    levelColorPool.addAll(colorsToShuffle);
+  }
+
   void _loadLevel(int levelNum) {
     currentLevelNumber = levelNum;
     final levels = LevelConfig.defaultLevels;
@@ -103,18 +135,13 @@ class GameController extends ChangeNotifier {
       orElse: () => levels.first,
     );
 
-    // Generate spline path
-    pathPoints = PathManager.generateSmoothPath(currentLevelConfig.controlPoints);
+    // Generate spline path using SCALED control points to prevent clipping
+    pathPoints = PathManager.generateSmoothPath(currentLevelConfig.scaledControlPoints);
     pathDistances = PathManager.computeCumulativeDistances(pathPoints);
     totalPathLength = pathDistances.isNotEmpty ? pathDistances.last : 0.0;
 
-    // Initialize Box
-    final initialColor = GameConstants.getLevelColor(_random.nextInt(currentLevelConfig.colorCount));
-    box = BoxModel(
-      targetColor: initialColor,
-      requiredCount: currentLevelConfig.boxDemand,
-      position: currentLevelConfig.boxPosition,
-    );
+    // Generate color pool
+    _generateLevelColorPool();
 
     // Reset game counters
     activeBalls.clear();
@@ -125,12 +152,12 @@ class GameController extends ChangeNotifier {
     boxesCleared = 0;
     ballsSpawned = 10;
     
-    // Prepare Intro state: spawn initial 10 balls queued behind the entrance line
+    // Prepare Intro state: spawn initial 10 balls queued behind the entrance line from color pool
     state = GameState.intro;
     
     int initialCount = 10;
     for (int i = 0; i < initialCount; i++) {
-      final color = GameConstants.getLevelColor(_random.nextInt(currentLevelConfig.colorCount));
+      final color = levelColorPool[colorPoolIndex++];
       final id = "init_${i}_${_random.nextInt(1000)}";
       double dist = -i * GameConstants.ballDiameter;
       activeBalls.add(Ball(
@@ -145,6 +172,14 @@ class GameController extends ChangeNotifier {
       activeBalls.last.currentPos = posAngle.position;
       activeBalls.last.currentAngle = posAngle.angle;
     }
+
+    // Initialize Box with SCALED box position and target color from active balls
+    final initialColor = _getRandomActiveColor(choosingNew: true);
+    box = BoxModel(
+      targetColor: initialColor,
+      requiredCount: currentLevelConfig.boxDemand,
+      position: currentLevelConfig.scaledBoxPosition,
+    );
     
     notifyListeners();
   }
@@ -235,12 +270,12 @@ class GameController extends ChangeNotifier {
       _updatePlaying(dt);
     }
 
-    // Ensure box target color is always solvable (contains a color currently present in activeBalls)
+    // Ensure box target color is always solvable and valid (no remainder issues)
     if (state == GameState.playing && box != null && activeBalls.isNotEmpty) {
-      final activeColors = activeBalls.map((b) => b.color).toSet();
-      if (!activeColors.contains(box!.targetColor)) {
-        // Target color is no longer present, shift target color to a color that is on the path
-        box!.reset(activeColors.first);
+      final remainingDemand = box!.requiredCount - box!.currentCount;
+      if (!_isColorValidForBox(box!.targetColor, currentCount: box!.currentCount, remainingDemand: remainingDemand)) {
+        // Target color is no longer valid, shift target color to a valid color and reset box
+        box!.reset(_getRandomActiveColor(choosingNew: true));
       }
     }
 
@@ -376,7 +411,7 @@ class GameController extends ChangeNotifier {
     if (ballsSpawned >= maxLevelBalls) return;
     ballsSpawned++;
     final id = DateTime.now().microsecondsSinceEpoch.toString() + "_${_random.nextInt(100)}";
-    final color = _getRandomActiveColor();
+    final color = levelColorPool[colorPoolIndex++];
     activeBalls.add(Ball(
       id: id,
       color: color,
@@ -386,16 +421,50 @@ class GameController extends ChangeNotifier {
     ));
   }
 
-  Color _getRandomActiveColor() {
-    // DEADLOCK PREVENTION: 
-    // If the chain is active, pick from colors currently in the chain to keep it solvable.
-    if (activeBalls.isNotEmpty) {
-      final currentColors = activeBalls.map((b) => b.color).toSet().toList();
-      if (currentColors.isNotEmpty) {
-        return currentColors[_random.nextInt(currentColors.length)];
+  bool _isColorValidForBox(Color color, {required int currentCount, required int remainingDemand}) {
+    int activeCount = activeBalls.where((b) => b.color == color).length;
+    int flyingCount = flyingBalls.where((b) => b.color == color).length;
+    int totalAvailable = activeCount + flyingCount;
+    if (totalAvailable == 0) return false;
+
+    if (ballsSpawned < maxLevelBalls) {
+      return true;
+    }
+
+    // Line has ended (spawning is complete)
+    final boxDemand = currentLevelConfig.boxDemand;
+    if (currentCount > 0 || flyingCount > 0) {
+      // We are in the middle of filling this box. We just need enough balls (on path + in air) to complete it.
+      return totalAvailable >= remainingDemand;
+    } else {
+      // We are choosing a new color. The active count must be a multiple of boxDemand.
+      return activeCount >= boxDemand && (activeCount % boxDemand == 0);
+    }
+  }
+
+  Color _getRandomActiveColor({bool choosingNew = false}) {
+    if (activeBalls.isEmpty) {
+      return GameConstants.getLevelColor(_random.nextInt(currentLevelConfig.colorCount));
+    }
+
+    final boxDemand = currentLevelConfig.boxDemand;
+    final currentCount = (box != null && !choosingNew) ? box!.currentCount : 0;
+    final remainingDemand = (box != null && !choosingNew) ? (box!.requiredCount - box!.currentCount) : boxDemand;
+
+    List<Color> validColors = [];
+    final activeColors = activeBalls.map((b) => b.color).toSet().toList();
+
+    for (var color in activeColors) {
+      if (_isColorValidForBox(color, currentCount: currentCount, remainingDemand: remainingDemand)) {
+        validColors.add(color);
       }
     }
-    return GameConstants.getLevelColor(_random.nextInt(currentLevelConfig.colorCount));
+
+    if (validColors.isNotEmpty) {
+      return validColors[_random.nextInt(validColors.length)];
+    }
+
+    return activeColors[_random.nextInt(activeColors.length)];
   }
 
   void _updateFlyingBalls(double dt) {
@@ -454,7 +523,7 @@ class GameController extends ChangeNotifier {
       HapticFeedback.heavyImpact();
 
       // Reset Box with a new target color
-      final newColor = _getRandomActiveColor();
+      final newColor = _getRandomActiveColor(choosingNew: true);
       box!.reset(newColor);
     } else {
       // Normal hit: spark burst
