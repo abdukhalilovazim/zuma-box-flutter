@@ -57,6 +57,8 @@ class StorageService {
     return list.map((e) => int.tryParse(e) ?? 1).toList();
   }
 
+  static const String _keyLanguage = "selected_language";
+
   Future<void> completeLevel(int level) async {
     final levels = getCompletedLevels();
     if (!levels.contains(level)) {
@@ -68,10 +70,19 @@ class StorageService {
     }
   }
 
+  String getLanguage() {
+    return _prefs.getString(_keyLanguage) ?? "uz";
+  }
+
+  Future<void> setLanguage(String lang) async {
+    await _prefs.setString(_keyLanguage, lang);
+  }
+
   Future<void> resetProgress() async {
     await _prefs.setInt(_keyCurrentLevel, 1);
     await _prefs.setInt(_keyBestScore, 0);
     await _prefs.setStringList(_keyUnlockedLevels, ["1"]);
     await _prefs.setStringList(_keyCompletedLevels, []);
+    await _prefs.setString(_keyLanguage, "uz");
   }
 }

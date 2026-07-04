@@ -695,6 +695,74 @@ class GameController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  String get currentLanguage => storageService.getLanguage();
+
+  void setLanguage(String lang) {
+    storageService.setLanguage(lang);
+    _safeNotifyListeners();
+  }
+
+  static const Map<String, Map<String, String>> _translations = {
+    "uz": {
+      "best_score": "ENG YAXSHI NATIJA",
+      "start_game": "O'YINNI BOSHLASH",
+      "select_level": "DARAJANI TANLANG",
+      "left": "TA QOLDI",
+      "score": "BALL",
+      "paused": "PAUZA",
+      "resume": "DAVOM ETISH",
+      "restart": "QAYTADAN BOSHLASH",
+      "main_menu": "ASOSIY MENU",
+      "game_over": "O'YIN TUGADI",
+      "try_again": "QAYTADAN URINISH",
+      "level_complete": "DARAJA YAKUNLANDI",
+      "final_score": "YAKUNIY BALL",
+      "next_level": "KEYINGI DARAJA",
+      "all_cleared": "SIZ BARCHA DARAJALARDAN O'TDINGIZ!",
+      "level": "DARAJA",
+    },
+    "ru": {
+      "best_score": "ЛУЧШИЙ РЕЗУЛЬТАТ",
+      "start_game": "НАЧАТЬ ИГРУ",
+      "select_level": "ВЫБЕРИТЕ УРОВЕНЬ",
+      "left": "ОСТАЛОСЬ",
+      "score": "СЧЕТ",
+      "paused": "ПАУЗА",
+      "resume": "ПРОДОЛЖИТЬ",
+      "restart": "НАЧАТЬ ЗАНОВО",
+      "main_menu": "ГЛАВНОЕ МЕНЮ",
+      "game_over": "ИГРА ОКОНЧЕНА",
+      "try_again": "ЕЩЕ РАЗ",
+      "level_complete": "УРОВЕНЬ ПРОЙДЕН",
+      "final_score": "ИТОГОВЫЙ СЧЕТ",
+      "next_level": "СЛЕДУЮЩИЙ УРОВЕНЬ",
+      "all_cleared": "ВЫ ПРОШЛИ ВСЕ УРОВНИ!",
+      "level": "УРОВЕНЬ",
+    },
+    "en": {
+      "best_score": "BEST SCORE",
+      "start_game": "START GAME",
+      "select_level": "SELECT LEVEL",
+      "left": "LEFT",
+      "score": "SCORE",
+      "paused": "PAUSED",
+      "resume": "RESUME",
+      "restart": "RESTART",
+      "main_menu": "MAIN MENU",
+      "game_over": "GAME OVER",
+      "try_again": "TRY AGAIN",
+      "level_complete": "LEVEL COMPLETE",
+      "final_score": "FINAL SCORE",
+      "next_level": "NEXT LEVEL",
+      "all_cleared": "YOU CLEARED ALL LEVELS!",
+      "level": "LEVEL",
+    }
+  };
+
+  String translate(String key) {
+    return _translations[currentLanguage]?[key] ?? _translations["uz"]?[key] ?? key;
+  }
 }
 
 extension OffsetNormalize on Offset {
