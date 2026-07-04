@@ -104,8 +104,8 @@ class GameController extends ChangeNotifier {
     final boxDemand = currentLevelConfig.boxDemand;
     final colorCount = currentLevelConfig.colorCount;
 
-    // Calculate max level balls closest to 30 that is a multiple of boxDemand
-    final maxBalls = (30 ~/ boxDemand) * boxDemand;
+    // Calculate max level balls closest to 60 that is a multiple of boxDemand
+    final maxBalls = (60 ~/ boxDemand) * boxDemand;
 
     int totalGroups = maxBalls ~/ boxDemand;
     List<int> groupsPerColor = List.filled(colorCount, 0);

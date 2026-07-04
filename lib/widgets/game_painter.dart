@@ -79,6 +79,8 @@ class GamePainter extends CustomPainter {
   void _drawPathTrack(Canvas canvas) {
     if (controller.pathPoints.isEmpty) return;
 
+    final themeColor = GameConstants.getLevelColor(controller.currentLevelNumber - 1);
+
     // Calculate warning path color shift (when chain is near the box)
     double warningIntensity = 0.0;
     if (controller.activeBalls.isNotEmpty) {
@@ -91,28 +93,73 @@ class GamePainter extends CustomPainter {
     double pulse = 0.6 + 0.4 * sin(controller.totalElapsedTime * 7.0);
     double warningAlpha = warningIntensity * pulse;
 
-    Color lineColor = Colors.white.withOpacity(0.15); // Normal visible matte track
-    if (warningAlpha > 0.0) {
-      lineColor = Color.lerp(
-        Colors.white.withOpacity(0.15),
-        GameConstants.neonRed.withOpacity(0.65),
-        warningAlpha,
-      )!;
-    }
+    Color glowColor = themeColor.withOpacity(0.12);
+    Color railColor = themeColor.withOpacity(0.3);
+    Color innerColor = const Color(0xFF0F0F1A);
+    Color centerLineColor = themeColor.withOpacity(0.45);
 
-    final linePaint = Paint()
-      ..color = lineColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4.0
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+    if (warningAlpha > 0.0) {
+      glowColor = Color.lerp(glowColor, GameConstants.neonRed.withOpacity(0.3), warningAlpha)!;
+      railColor = Color.lerp(railColor, GameConstants.neonRed.withOpacity(0.65), warningAlpha)!;
+      centerLineColor = Color.lerp(centerLineColor, GameConstants.neonRed.withOpacity(0.85), warningAlpha)!;
+    }
 
     final path = Path();
     path.moveTo(controller.pathPoints.first.dx, controller.pathPoints.first.dy);
     for (int i = 1; i < controller.pathPoints.length; i++) {
       path.lineTo(controller.pathPoints[i].dx, controller.pathPoints[i].dy);
     }
-    canvas.drawPath(path, linePaint);
+
+    // 1. Draw Under-glow (thick blur shadow)
+    final glowPaint = Paint()
+      ..color = glowColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 46.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
+    canvas.drawPath(path, glowPaint);
+
+    // 2. Draw Outer Rails (thick boundary)
+    final railPaint = Paint()
+      ..color = railColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 40.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(path, railPaint);
+
+    // 3. Draw Inner Grooved Channel (cuts into rails, showing dark center)
+    final innerPaint = Paint()
+      ..color = innerColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 34.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(path, innerPaint);
+
+    // 4. Draw Animated Flowing Energy Dots along the center of the track
+    final dotPaint = Paint()
+      ..color = centerLineColor
+      ..style = PaintingStyle.fill;
+
+    double dotSpacing = 24.0;
+    double speed = 40.0; // Flow speed (pixels per second)
+    double offset = (controller.totalElapsedTime * speed) % dotSpacing;
+
+    for (double d = offset; d < controller.totalPathLength; d += dotSpacing) {
+      final posAngle = PathManager.getPositionAtDistance(d, controller.pathPoints, controller.pathDistances);
+      
+      // Draw a glowing outer circle for each dot
+      final dotGlow = Paint()
+        ..color = centerLineColor.withOpacity(0.35)
+        ..style = PaintingStyle.fill
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
+      canvas.drawCircle(posAngle.position, 4.0, dotGlow);
+
+      // Draw solid inner core
+      canvas.drawCircle(posAngle.position, 1.8, dotPaint);
+    }
   }
 
   void _drawActiveBalls(Canvas canvas) {
