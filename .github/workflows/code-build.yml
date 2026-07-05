@@ -1,0 +1,177 @@
+name: Build APK and Send to Telegram
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Version Name (e.g., 1.0.1 - Leave empty to use version from pubspec.yaml)'
+        required: false
+        default: ''
+      version_code:
+        description: 'Version Code / Build Number (e.g., 2 - Leave empty to use GitHub run number)'
+        required: false
+        default: ''
+
+jobs:
+  code-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ✅ Checkout Code
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      # ✅ Get version from pubspec.yaml or manual inputs
+      - name: Get Version
+        id: get_version
+        run: |
+          # Read version line from pubspec.yaml (format: version: 1.0.0+1)
+          PUBSPEC_VERSION=$(grep '^version: ' pubspec.yaml | sed 's/version: //' | xargs)
+          PUBSPEC_NAME=$(echo $PUBSPEC_VERSION | cut -d '+' -f 1)
+          PUBSPEC_CODE=$(echo $PUBSPEC_VERSION | cut -d '+' -f 2)
+          
+          # Version Name (manual input > pubspec)
+          if [ -n "${{ github.event.inputs.version_name }}" ]; then
+            VERSION_NAME="${{ github.event.inputs.version_name }}"
+          else
+            VERSION_NAME="$PUBSPEC_NAME"
+          fi
+          
+          # Version Code (manual input > github run number)
+          if [ -n "${{ github.event.inputs.version_code }}" ]; then
+            VERSION_CODE="${{ github.event.inputs.version_code }}"
+          else
+            VERSION_CODE="${{ github.run_number }}"
+          fi
+          
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+          echo "Final Version: v$VERSION_NAME (Build $VERSION_CODE)"
+
+      # ✅ Setup Flutter with cache
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.38.5"
+          channel: "stable"
+          cache: true
+
+      # ✅ Setup Java with Gradle cache
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "zulu"
+          java-version: "21"
+          cache: gradle
+
+      # ✅ Cache pub dependencies
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      # ✅ Cache Gradle
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            android/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      # ✅ Install dependencies
+      - name: Install dependencies
+        run: flutter pub get
+
+      # ✅ Setup Android Signing
+      - name: Setup Android Signing
+        run: |
+          mkdir -p android/app
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore.warehouse.jks
+          echo "${{ secrets.KEY_PROPERTIES }}" > android/key.properties
+          # Update storeFile path to point to keystore.warehouse.jks in key.properties
+          sed -i 's|storeFile=.*|storeFile=keystore.warehouse.jks|' android/key.properties
+
+      # ✅ Build Release APK
+      - name: Build Release APK
+        run: |
+          flutter build apk \
+            --build-name="${{ steps.get_version.outputs.version_name }}" \
+            --build-number="${{ steps.get_version.outputs.version_code }}" \
+            --target-platform android-arm,android-arm64 \
+            --split-per-abi
+
+      # ✅ Rename APK files to include versioning
+      - name: Rename APKs with version info
+        run: |
+          VERSION_NAME="${{ steps.get_version.outputs.version_name }}"
+          VERSION_CODE="${{ steps.get_version.outputs.version_code }}"
+          cd build/app/outputs/flutter-apk
+          mv app-armeabi-v7a-release.apk zumabox-v${VERSION_NAME}-b${VERSION_CODE}-armeabi-v7a.apk
+          mv app-arm64-v8a-release.apk zumabox-v${VERSION_NAME}-b${VERSION_CODE}-arm64-v8a.apk
+
+      # ✅ Upload APKs to GitHub Artifacts
+      - name: Upload APKs to GitHub Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: zumabox-apks-v${{ steps.get_version.outputs.version_name }}-b${{ steps.get_version.outputs.version_code }}
+          path: |
+            build/app/outputs/flutter-apk/zumabox-v*.apk
+
+      # ✅ Send APK armeabi-v7a to Telegram
+      - name: Send APK armeabi-v7a to Telegram
+        if: ${{ success() }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          document: build/app/outputs/flutter-apk/zumabox-v${{ steps.get_version.outputs.version_name }}-b${{ steps.get_version.outputs.version_code }}-armeabi-v7a.apk
+          message: |
+            ✅ APK Build Successful (armeabi-v7a)
+            📲 ZumaBox (32-bit Device Support)
+            
+            📦 Version: v${{ steps.get_version.outputs.version_name }} (Build: ${{ steps.get_version.outputs.version_code }})
+            👤 Author: ${{ github.actor }}
+            🌿 Branch: ${{ github.ref_name }}
+            📦 Repository: ${{ github.repository }}
+
+      # ✅ Send APK arm64-v8a to Telegram
+      - name: Send APK arm64-v8a to Telegram
+        if: ${{ success() }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          document: build/app/outputs/flutter-apk/zumabox-v${{ steps.get_version.outputs.version_name }}-b${{ steps.get_version.outputs.version_code }}-arm64-v8a.apk
+          message: |
+            ✅ APK Build Successful (arm64-v8a)
+            📲 ZumaBox (64-bit Device Support)
+            
+            📦 Version: v${{ steps.get_version.outputs.version_name }} (Build: ${{ steps.get_version.outputs.version_code }})
+            👤 Author: ${{ github.actor }}
+            🌿 Branch: ${{ github.ref_name }}
+            📦 Repository: ${{ github.repository }}
+
+      # ❌ Failure notification
+      - name: Send Error Notification
+        if: ${{ failure() }}
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ❌ APK Build Failed
+            👤 Author: ${{ github.actor }}
+            🌿 Branch: ${{ github.ref_name }}
+            📦 Repository: ${{ github.repository }}
