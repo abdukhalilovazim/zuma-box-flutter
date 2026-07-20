@@ -201,6 +201,36 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
 
                 const Spacer(flex: 1),
 
+                // Theme Select Section
+                Text(
+                  controller.translate('select_theme'),
+                  style: const TextStyle(
+                    color: Colors.white38,
+                    fontSize: 11.0,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2.0,
+                  ),
+                ),
+                const SizedBox(height: 12.0),
+
+                // Theme Horizontal List
+                Container(
+                  height: 90.0,
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    children: [
+                      _buildThemeCard(context, controller, "tokyo", "tokyo.png"),
+                      _buildThemeCard(context, controller, "germany", "germany.png"),
+                      _buildThemeCard(context, controller, "egypt", "egypt.png"),
+                      _buildThemeCard(context, controller, "elephant", "elephant.png"),
+                    ],
+                  ),
+                ),
+
+                const Spacer(flex: 1),
+
                 // Level Select Section
                 Text(
                   controller.translate('select_level'),
@@ -324,6 +354,56 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildThemeCard(BuildContext context, GameController controller, String themeKey, String fileName) {
+    final isSelected = controller.currentTheme == themeKey;
+    final themeName = controller.translate(themeKey);
+
+    return GestureDetector(
+      onTap: () {
+        controller.setTheme(themeKey);
+      },
+      child: Container(
+        width: 140.0,
+        margin: const EdgeInsets.symmetric(horizontal: 8.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.0),
+          border: Border.all(
+            color: isSelected ? GameConstants.neonText : Colors.transparent,
+            width: 2.0,
+          ),
+          image: DecorationImage(
+            image: AssetImage("assets/images/themes/$fileName"),
+            fit: BoxFit.cover,
+            colorFilter: isSelected ? null : ColorFilter.mode(Colors.black.withOpacity(0.5), BlendMode.darken),
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: GameConstants.neonText.withOpacity(0.4),
+                    blurRadius: 8.0,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : [],
+        ),
+        alignment: Alignment.bottomCenter,
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Text(
+          themeName,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.white70,
+            fontSize: 10.0,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.0,
+            shadows: const [
+              Shadow(color: Colors.black, blurRadius: 4.0),
+            ],
+          ),
+        ),
       ),
     );
   }

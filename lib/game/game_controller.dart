@@ -61,6 +61,9 @@ class GameController extends ChangeNotifier {
   late LevelConfig currentLevelConfig;
   int currentLevelNumber = 1;
 
+  // Active theme
+  String currentTheme = "tokyo";
+
   // Path data
   List<Offset> pathPoints = [];
   List<double> pathDistances = [];
@@ -93,6 +96,7 @@ class GameController extends ChangeNotifier {
 
   GameController({required this.storageService}) {
     currentLevelNumber = storageService.getCurrentLevel();
+    currentTheme = storageService.getTheme();
     // Pre-initialize to Level 1
     _loadLevel(currentLevelNumber);
   }
@@ -718,6 +722,12 @@ class GameController extends ChangeNotifier {
     _safeNotifyListeners();
   }
 
+  void setTheme(String theme) {
+    currentTheme = theme;
+    storageService.setTheme(theme);
+    _safeNotifyListeners();
+  }
+
   static const Map<String, Map<String, String>> _translations = {
     "uz": {
       "best_score": "ENG YAXSHI NATIJA",
@@ -736,6 +746,11 @@ class GameController extends ChangeNotifier {
       "next_level": "KEYINGI DARAJA",
       "all_cleared": "SIZ BARCHA DARAJALARDAN O'TDINGIZ!",
       "level": "DARAJA",
+      "select_theme": "TEMA TANLANG",
+      "tokyo": "TOKYO",
+      "germany": "GERMANIYA",
+      "egypt": "MISR",
+      "elephant": "FILLAR QABRISTONI",
     },
     "ru": {
       "best_score": "ЛУЧШИЙ РЕЗУЛЬТАТ",
@@ -754,6 +769,11 @@ class GameController extends ChangeNotifier {
       "next_level": "СЛЕДУЮЩИЙ УРОВЕНЬ",
       "all_cleared": "ВЫ ПРОШЛИ ВСЕ УРОВНИ!",
       "level": "УРОВЕНЬ",
+      "select_theme": "ВЫБЕРИТЕ ТЕМУ",
+      "tokyo": "ТОКИО",
+      "germany": "ГЕРМАНИЯ",
+      "egypt": "ЕГИПЕТ",
+      "elephant": "КЛАДБИЩЕ СЛОНОВ",
     },
     "en": {
       "best_score": "BEST SCORE",
@@ -772,6 +792,11 @@ class GameController extends ChangeNotifier {
       "next_level": "NEXT LEVEL",
       "all_cleared": "YOU CLEARED ALL LEVELS!",
       "level": "LEVEL",
+      "select_theme": "SELECT THEME",
+      "tokyo": "TOKYO",
+      "germany": "GERMANY",
+      "egypt": "EGYPT",
+      "elephant": "ELEPHANT GRAVEYARD",
     }
   };
 

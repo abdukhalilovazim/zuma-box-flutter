@@ -18,8 +18,7 @@ class GamePainter extends CustomPainter {
     canvas.save();
     canvas.scale(scale);
 
-    // 1. Draw Nebulae & Scrolling Starfield Background
-    _drawCosmicBackground(canvas, const Size(GameConstants.logicalWidth, GameConstants.logicalHeight));
+    // 1. (Removed Cosmic Background to show the Theme Image underneath)
 
     // 2. Draw Spline Path (Neon Dotted Guide Track)
     _drawPathTrack(canvas);

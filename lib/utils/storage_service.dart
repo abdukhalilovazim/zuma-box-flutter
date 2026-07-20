@@ -5,6 +5,7 @@ class StorageService {
   static const String _keyBestScore = "best_score";
   static const String _keyUnlockedLevels = "unlocked_levels";
   static const String _keyCompletedLevels = "completed_levels";
+  static const String _keySelectedTheme = "selected_theme";
 
   final SharedPreferences _prefs;
 
@@ -78,11 +79,20 @@ class StorageService {
     await _prefs.setString(_keyLanguage, lang);
   }
 
+  String getTheme() {
+    return _prefs.getString(_keySelectedTheme) ?? "tokyo";
+  }
+
+  Future<void> setTheme(String theme) async {
+    await _prefs.setString(_keySelectedTheme, theme);
+  }
+
   Future<void> resetProgress() async {
     await _prefs.setInt(_keyCurrentLevel, 1);
     await _prefs.setInt(_keyBestScore, 0);
     await _prefs.setStringList(_keyUnlockedLevels, ["1"]);
     await _prefs.setStringList(_keyCompletedLevels, []);
     await _prefs.setString(_keyLanguage, "uz");
+    await _prefs.setString(_keySelectedTheme, "tokyo");
   }
 }

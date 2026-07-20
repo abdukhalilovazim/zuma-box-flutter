@@ -53,6 +53,13 @@ class _GameScreenState extends State<GameScreen> {
 
           return Stack(
             children: [
+              // Theme Background Image
+              Positioned.fill(
+                child: Image.asset(
+                  "assets/images/themes/${controller.currentTheme}.png",
+                  fit: BoxFit.cover,
+                ),
+              ),
               // Interactive Canvas area (centered)
               Positioned(
                 left: offsetX,
