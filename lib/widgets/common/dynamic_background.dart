@@ -74,6 +74,12 @@ class _DynamicBackgroundState extends State<DynamicBackground>
             },
           ),
         ),
+        // Dark overlay to prevent BG elements from overpowering the foreground
+        Positioned.fill(
+          child: Container(
+            color: Colors.black.withValues(alpha: 0.45),
+          ),
+        ),
         // The foreground content
         Positioned.fill(child: widget.child),
       ],
