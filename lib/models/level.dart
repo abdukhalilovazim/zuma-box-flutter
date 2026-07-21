@@ -37,11 +37,13 @@ class LevelConfig {
 
   Offset get scaledBoxPosition {
     // Map x from original range [40, 360] to [60, 340]
-    double newX = 60.0 + (boxPosition.dx - 40.0) * (340.0 - 60.0) / (360.0 - 40.0);
+    double newX =
+        60.0 + (boxPosition.dx - 40.0) * (340.0 - 60.0) / (360.0 - 40.0);
     newX = newX.clamp(60.0, 340.0);
 
     // Map y from original range [80, 660] to [140, 600]
-    double newY = 140.0 + (boxPosition.dy - 80.0) * (600.0 - 140.0) / (660.0 - 80.0);
+    double newY =
+        140.0 + (boxPosition.dy - 80.0) * (600.0 - 140.0) / (660.0 - 80.0);
     newY = newY.clamp(140.0, 600.0);
 
     return Offset(newX, newY);
@@ -181,15 +183,17 @@ class LevelConfig {
       final int demand = 2 + ((i - 1) ~/ 7);
       final int colors = 3 + ((i - 1) ~/ 10);
 
-      configs.add(LevelConfig(
-        levelNumber: i,
-        name: "${base.name} - ${i}",
-        controlPoints: mirroredPoints,
-        boxPosition: Offset(bx, by),
-        speedMultiplier: speed,
-        boxDemand: demand.clamp(2, 6),
-        colorCount: colors.clamp(3, 5),
-      ));
+      configs.add(
+        LevelConfig(
+          levelNumber: i,
+          name: "${base.name} - $i",
+          controlPoints: mirroredPoints,
+          boxPosition: Offset(bx, by),
+          speedMultiplier: speed,
+          boxDemand: demand.clamp(2, 6),
+          colorCount: colors.clamp(3, 5),
+        ),
+      );
     }
     return configs;
   }
@@ -199,5 +203,9 @@ class _BaseLayout {
   final String name;
   final List<Waypoint> points;
   final Offset boxPos;
-  const _BaseLayout({required this.name, required this.points, required this.boxPos});
+  const _BaseLayout({
+    required this.name,
+    required this.points,
+    required this.boxPos,
+  });
 }

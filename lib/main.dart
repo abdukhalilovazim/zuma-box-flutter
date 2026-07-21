@@ -10,13 +10,9 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Force portrait orientation and full-screen immersive mode for arcade feel
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-  ]);
-  
-  await SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.immersiveSticky,
-  );
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   // Initialize Storage Service
   final storageService = await StorageService.init();
@@ -33,7 +29,7 @@ void main() async {
 }
 
 class ZumaBoxApp extends StatelessWidget {
-  const ZumaBoxApp({Key? key}) : super(key: key);
+  const ZumaBoxApp({super.key});
 
   @override
   Widget build(BuildContext context) {

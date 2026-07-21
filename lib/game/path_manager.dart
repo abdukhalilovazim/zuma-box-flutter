@@ -10,9 +10,13 @@ class PositionAngle {
 
 class PathManager {
   // Generates a smooth list of points along the path using Catmull-Rom interpolation
-  static List<Offset> generateSmoothPath(List<Waypoint> waypoints, {int pointsPerSegment = 30}) {
+  static List<Offset> generateSmoothPath(
+    List<Waypoint> waypoints, {
+    int pointsPerSegment = 30,
+  }) {
     if (waypoints.isEmpty) return [];
-    if (waypoints.length < 2) return waypoints.map((w) => w.toOffset()).toList();
+    if (waypoints.length < 2)
+      return waypoints.map((w) => w.toOffset()).toList();
 
     List<Offset> controlPoints = waypoints.map((w) => w.toOffset()).toList();
     List<Offset> path = [];
@@ -21,7 +25,7 @@ class PathManager {
     List<Offset> pts = [
       controlPoints.first,
       ...controlPoints,
-      controlPoints.last
+      controlPoints.last,
     ];
 
     for (int i = 1; i < pts.length - 2; i++) {
@@ -35,19 +39,19 @@ class PathManager {
         double t2 = t * t;
         double t3 = t2 * t;
 
-        double x = 0.5 * (
-          (2 * p1.dx) +
-          (-p0.dx + p2.dx) * t +
-          (2 * p0.dx - 5 * p1.dx + 4 * p2.dx - p3.dx) * t2 +
-          (-p0.dx + 3 * p1.dx - 3 * p2.dx + p3.dx) * t3
-        );
+        double x =
+            0.5 *
+            ((2 * p1.dx) +
+                (-p0.dx + p2.dx) * t +
+                (2 * p0.dx - 5 * p1.dx + 4 * p2.dx - p3.dx) * t2 +
+                (-p0.dx + 3 * p1.dx - 3 * p2.dx + p3.dx) * t3);
 
-        double y = 0.5 * (
-          (2 * p1.dy) +
-          (-p0.dy + p2.dy) * t +
-          (2 * p0.dy - 5 * p1.dy + 4 * p2.dy - p3.dy) * t2 +
-          (-p0.dy + 3 * p1.dy - 3 * p2.dy + p3.dy) * t3
-        );
+        double y =
+            0.5 *
+            ((2 * p1.dy) +
+                (-p0.dy + p2.dy) * t +
+                (2 * p0.dy - 5 * p1.dy + 4 * p2.dy - p3.dy) * t2 +
+                (-p0.dy + 3 * p1.dy - 3 * p2.dy + p3.dy) * t3);
 
         path.add(Offset(x, y));
       }
@@ -89,7 +93,9 @@ class PathManager {
       return PositionAngle(path.first, dir.direction);
     }
     if (distance >= totalLength) {
-      Offset dir = path.length > 1 ? (path.last - path[path.length - 2]) : Offset.zero;
+      Offset dir = path.length > 1
+          ? (path.last - path[path.length - 2])
+          : Offset.zero;
       return PositionAngle(path.last, dir.direction);
     }
 

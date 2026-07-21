@@ -8,7 +8,7 @@ import 'common/glass_card.dart';
 import 'common/glass_button.dart';
 
 class HudWidget extends StatelessWidget {
-  const HudWidget({Key? key}) : super(key: key);
+  const HudWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -30,26 +30,32 @@ class HudWidget extends StatelessWidget {
           left: 0.0,
           right: 0.0,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 15.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 15.0,
+            ),
             child: SafeArea(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(30.0),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 12.0, sigmaY: 12.0),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0,
+                      vertical: 10.0,
+                    ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E1E2E).withOpacity(0.85),
+                      color: const Color(0xFF1E1E2E).withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(30.0),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.08),
+                        color: Colors.white.withValues(alpha: 0.08),
                         width: 1.0,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
+                          color: Colors.black.withValues(alpha: 0.25),
                           blurRadius: 12.0,
-                        )
+                        ),
                       ],
                     ),
                     child: Row(
@@ -75,13 +81,19 @@ class HudWidget extends StatelessWidget {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(20.0),
                             child: BackdropFilter(
-                              filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                              filter: ImageFilter.blur(
+                                sigmaX: 5.0,
+                                sigmaY: 5.0,
+                              ),
                               child: Container(
                                 padding: const EdgeInsets.all(8.0),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.08),
+                                  color: Colors.white.withValues(alpha: 0.08),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white.withOpacity(0.08), width: 1.0),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.08),
+                                    width: 1.0,
+                                  ),
                                 ),
                                 child: const Icon(
                                   Icons.pause,
@@ -94,9 +106,7 @@ class HudWidget extends StatelessWidget {
                         ),
 
                         // Score Pop counter
-                        Expanded(
-                          child: ScoreText(score: controller.score),
-                        ),
+                        Expanded(child: ScoreText(score: controller.score)),
                       ],
                     ),
                   ),
@@ -119,7 +129,10 @@ class HudWidget extends StatelessWidget {
                 child: Center(
                   child: Text(
                     controller.translate('resume'),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -130,7 +143,10 @@ class HudWidget extends StatelessWidget {
                 child: Center(
                   child: Text(
                     controller.translate('restart'),
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -145,7 +161,10 @@ class HudWidget extends StatelessWidget {
                 child: Center(
                   child: Text(
                     controller.translate('main_menu'),
-                    style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -163,8 +182,8 @@ class HudWidget extends StatelessWidget {
                     gradient: RadialGradient(
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.4),
-                        Colors.red.withOpacity(0.35),
+                        Colors.black.withValues(alpha: 0.4),
+                        Colors.red.withValues(alpha: 0.35),
                       ],
                       stops: const [0.0, 0.6, 1.0],
                     ),
@@ -184,7 +203,10 @@ class HudWidget extends StatelessWidget {
                     child: Center(
                       child: Text(
                         controller.translate('try_again'),
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -198,7 +220,10 @@ class HudWidget extends StatelessWidget {
                     child: Center(
                       child: Text(
                         controller.translate('main_menu'),
-                        style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -220,12 +245,16 @@ class HudWidget extends StatelessWidget {
               const SizedBox(height: 24.0),
               if (controller.currentLevelNumber < 30)
                 GlassButton(
-                  onTap: () => controller.startLevel(controller.currentLevelNumber + 1),
+                  onTap: () =>
+                      controller.startLevel(controller.currentLevelNumber + 1),
                   color: Colors.white.withValues(alpha: 0.2),
                   child: Center(
                     child: Text(
                       controller.translate('next_level'),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 )
@@ -255,7 +284,10 @@ class HudWidget extends StatelessWidget {
                 child: Center(
                   child: Text(
                     controller.translate('main_menu'),
-                    style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -275,7 +307,9 @@ class HudWidget extends StatelessWidget {
     required List<Widget> content,
   }) {
     return Container(
-      color: Colors.black.withOpacity(0.65), // Soft dark vignette backdrop
+      color: Colors.black.withValues(
+        alpha: 0.65,
+      ), // Soft dark vignette backdrop
       child: Center(
         child: GlassCard(
           width: 310,
@@ -321,7 +355,10 @@ class HudWidget extends StatelessWidget {
               const SizedBox(height: 12.0),
               if (score != null) ...[
                 Text(
-                  Provider.of<GameController>(context, listen: false).translate('final_score'),
+                  Provider.of<GameController>(
+                    context,
+                    listen: false,
+                  ).translate('final_score'),
                   style: const TextStyle(
                     color: Colors.white38,
                     fontSize: 11.0,
@@ -347,7 +384,6 @@ class HudWidget extends StatelessWidget {
       ),
     );
   }
-
 }
 
 // ---------------------------------------------
@@ -356,7 +392,7 @@ class HudWidget extends StatelessWidget {
 
 class ScoreText extends StatefulWidget {
   final int score;
-  const ScoreText({Key? key, required this.score}) : super(key: key);
+  const ScoreText({super.key, required this.score});
 
   @override
   _ScoreTextState createState() => _ScoreTextState();
@@ -401,7 +437,7 @@ class _ScoreTextState extends State<ScoreText> with TickerProviderStateMixin {
         vsync: this,
       ),
     };
-    
+
     final animController = item['controller'] as AnimationController;
     animController.forward().then((_) {
       if (mounted) {
@@ -480,13 +516,14 @@ class _ScoreTextState extends State<ScoreText> with TickerProviderStateMixin {
 class CounterText extends StatefulWidget {
   final int target;
   final TextStyle style;
-  const CounterText({Key? key, required this.target, required this.style}) : super(key: key);
+  const CounterText({super.key, required this.target, required this.style});
 
   @override
   _CounterTextState createState() => _CounterTextState();
 }
 
-class _CounterTextState extends State<CounterText> with SingleTickerProviderStateMixin {
+class _CounterTextState extends State<CounterText>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -497,9 +534,10 @@ class _CounterTextState extends State<CounterText> with SingleTickerProviderStat
       duration: const Duration(milliseconds: 1400),
       vsync: this,
     );
-    _animation = Tween<double>(begin: 0.0, end: widget.target.toDouble()).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _animation = Tween<double>(
+      begin: 0.0,
+      end: widget.target.toDouble(),
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
     _controller.forward();
   }
 
@@ -514,10 +552,7 @@ class _CounterTextState extends State<CounterText> with SingleTickerProviderStat
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        return Text(
-          _animation.value.toInt().toString(),
-          style: widget.style,
-        );
+        return Text(_animation.value.toInt().toString(), style: widget.style);
       },
     );
   }
@@ -526,13 +561,14 @@ class _CounterTextState extends State<CounterText> with SingleTickerProviderStat
 class GlitchText extends StatefulWidget {
   final String text;
   final TextStyle style;
-  const GlitchText({Key? key, required this.text, required this.style}) : super(key: key);
+  const GlitchText({super.key, required this.text, required this.style});
 
   @override
   _GlitchTextState createState() => _GlitchTextState();
 }
 
-class _GlitchTextState extends State<GlitchText> with SingleTickerProviderStateMixin {
+class _GlitchTextState extends State<GlitchText>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   final Random _random = Random();
 
@@ -557,8 +593,12 @@ class _GlitchTextState extends State<GlitchText> with SingleTickerProviderStateM
       animation: _controller,
       builder: (context, child) {
         final bool showGlitch = _random.nextDouble() < 0.15;
-        final double offsetX = showGlitch ? (_random.nextDouble() * 6.0 - 3.0) : 0.0;
-        final double offsetY = showGlitch ? (_random.nextDouble() * 2.0 - 1.0) : 0.0;
+        final double offsetX = showGlitch
+            ? (_random.nextDouble() * 6.0 - 3.0)
+            : 0.0;
+        final double offsetY = showGlitch
+            ? (_random.nextDouble() * 2.0 - 1.0)
+            : 0.0;
 
         return Stack(
           alignment: Alignment.center,
@@ -569,7 +609,9 @@ class _GlitchTextState extends State<GlitchText> with SingleTickerProviderStateM
                 top: offsetY,
                 child: Text(
                   widget.text,
-                  style: widget.style.copyWith(color: Colors.cyanAccent.withOpacity(0.85)),
+                  style: widget.style.copyWith(
+                    color: Colors.cyanAccent.withValues(alpha: 0.85),
+                  ),
                 ),
               ),
             if (showGlitch)
@@ -578,13 +620,12 @@ class _GlitchTextState extends State<GlitchText> with SingleTickerProviderStateM
                 top: -offsetY,
                 child: Text(
                   widget.text,
-                  style: widget.style.copyWith(color: Colors.redAccent.withOpacity(0.85)),
+                  style: widget.style.copyWith(
+                    color: Colors.redAccent.withValues(alpha: 0.85),
+                  ),
                 ),
               ),
-            Text(
-              widget.text,
-              style: widget.style,
-            ),
+            Text(widget.text, style: widget.style),
           ],
         );
       },
@@ -595,13 +636,18 @@ class _GlitchTextState extends State<GlitchText> with SingleTickerProviderStateM
 class RainbowShimmerText extends StatefulWidget {
   final String text;
   final TextStyle style;
-  const RainbowShimmerText({Key? key, required this.text, required this.style}) : super(key: key);
+  const RainbowShimmerText({
+    super.key,
+    required this.text,
+    required this.style,
+  });
 
   @override
   _RainbowShimmerTextState createState() => _RainbowShimmerTextState();
 }
 
-class _RainbowShimmerTextState extends State<RainbowShimmerText> with SingleTickerProviderStateMixin {
+class _RainbowShimmerTextState extends State<RainbowShimmerText>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -662,13 +708,14 @@ class _RainbowShimmerTextState extends State<RainbowShimmerText> with SingleTick
 
 class AnimatedStars extends StatefulWidget {
   final int count;
-  const AnimatedStars({Key? key, required this.count}) : super(key: key);
+  const AnimatedStars({super.key, required this.count});
 
   @override
   _AnimatedStarsState createState() => _AnimatedStarsState();
 }
 
-class _AnimatedStarsState extends State<AnimatedStars> with TickerProviderStateMixin {
+class _AnimatedStarsState extends State<AnimatedStars>
+    with TickerProviderStateMixin {
   late List<AnimationController> _controllers;
   late List<Animation<double>> _animations;
 
@@ -683,9 +730,10 @@ class _AnimatedStarsState extends State<AnimatedStars> with TickerProviderStateM
       ),
     );
     _animations = _controllers.map((c) {
-      return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(parent: c, curve: Curves.bounceOut),
-      );
+      return Tween<double>(
+        begin: 0.0,
+        end: 1.0,
+      ).animate(CurvedAnimation(parent: c, curve: Curves.bounceOut));
     }).toList();
 
     _animateStars();
@@ -721,9 +769,9 @@ class _AnimatedStarsState extends State<AnimatedStars> with TickerProviderStateM
             shadows: isGold
                 ? [
                     Shadow(
-                      color: Colors.amber.withOpacity(0.5),
+                      color: Colors.amber.withValues(alpha: 0.5),
                       blurRadius: 10.0,
-                    )
+                    ),
                   ]
                 : null,
           ),
@@ -736,13 +784,18 @@ class _AnimatedStarsState extends State<AnimatedStars> with TickerProviderStateM
 class PulsingButton extends StatefulWidget {
   final Widget child;
   final VoidCallback onPressed;
-  const PulsingButton({Key? key, required this.child, required this.onPressed}) : super(key: key);
+  const PulsingButton({
+    super.key,
+    required this.child,
+    required this.onPressed,
+  });
 
   @override
   _PulsingButtonState createState() => _PulsingButtonState();
 }
 
-class _PulsingButtonState extends State<PulsingButton> with SingleTickerProviderStateMixin {
+class _PulsingButtonState extends State<PulsingButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -753,9 +806,10 @@ class _PulsingButtonState extends State<PulsingButton> with SingleTickerProvider
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0.96, end: 1.04).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.96,
+      end: 1.04,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -768,10 +822,7 @@ class _PulsingButtonState extends State<PulsingButton> with SingleTickerProvider
   Widget build(BuildContext context) {
     return ScaleTransition(
       scale: _animation,
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        child: widget.child,
-      ),
+      child: GestureDetector(onTap: widget.onPressed, child: widget.child),
     );
   }
 }

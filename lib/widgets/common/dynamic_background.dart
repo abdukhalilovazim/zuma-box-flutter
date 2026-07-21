@@ -5,14 +5,15 @@ import 'background_painters.dart';
 
 class DynamicBackground extends StatefulWidget {
   final Widget child;
-  
-  const DynamicBackground({Key? key, required this.child}) : super(key: key);
+
+  const DynamicBackground({super.key, required this.child});
 
   @override
   State<DynamicBackground> createState() => _DynamicBackgroundState();
 }
 
-class _DynamicBackgroundState extends State<DynamicBackground> with SingleTickerProviderStateMixin {
+class _DynamicBackgroundState extends State<DynamicBackground>
+    with SingleTickerProviderStateMixin {
   late AnimationController _bgController;
 
   @override

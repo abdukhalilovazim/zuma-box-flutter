@@ -15,8 +15,5 @@ class Waypoint {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'dx': dx,
-    'dy': dy,
-  };
+  Map<String, dynamic> toJson() => {'dx': dx, 'dy': dy};
 }

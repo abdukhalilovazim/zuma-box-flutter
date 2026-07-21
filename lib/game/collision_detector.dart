@@ -14,7 +14,7 @@ class CollisionDetector {
       final ball = activeBalls[i];
       // Only normal scale balls can be tapped
       if (ball.visualScale < 0.8) continue;
-      
+
       final distance = (logicalTapPos - ball.currentPos).distance;
       if (distance <= (ballRadius + tolerance)) {
         return i; // Return the first hit index

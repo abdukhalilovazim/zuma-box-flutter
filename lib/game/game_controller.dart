@@ -24,13 +24,7 @@ class TapEffect {
   });
 }
 
-enum GameState {
-  intro,
-  playing,
-  paused,
-  gameOver,
-  levelComplete,
-}
+enum GameState { intro, playing, paused, gameOver, levelComplete }
 
 class GameParticle {
   Offset position;
@@ -98,8 +92,6 @@ class GameController extends ChangeNotifier {
   // Notifier specifically for the canvas repaints
   final ValueNotifier<double> tickNotifier = ValueNotifier(0.0);
 
-
-
   GameController({required this.storageService}) {
     currentLevelNumber = storageService.getCurrentLevel();
     currentTheme = storageService.getTheme();
@@ -150,9 +142,12 @@ class GameController extends ChangeNotifier {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
 
-    final themeColor = GameConstants.getLevelColor(currentLevelNumber - 1, theme: currentTheme);
-    Color glowColor = themeColor.withOpacity(0.12);
-    Color railColor = themeColor.withOpacity(0.3);
+    final themeColor = GameConstants.getLevelColor(
+      currentLevelNumber - 1,
+      theme: currentTheme,
+    );
+    Color glowColor = themeColor.withValues(alpha: 0.12);
+    Color railColor = themeColor.withValues(alpha: 0.3);
     Color innerColor = const Color(0xFF0F0F1A);
 
     final glowPaint = Paint()
@@ -192,7 +187,9 @@ class GameController extends ChangeNotifier {
     );
 
     // Generate spline path using SCALED control points to prevent clipping
-    pathPoints = PathManager.generateSmoothPath(currentLevelConfig.scaledControlPoints);
+    pathPoints = PathManager.generateSmoothPath(
+      currentLevelConfig.scaledControlPoints,
+    );
     pathDistances = PathManager.computeCumulativeDistances(pathPoints);
     totalPathLength = pathDistances.isNotEmpty ? pathDistances.last : 0.0;
 
@@ -210,23 +207,29 @@ class GameController extends ChangeNotifier {
     boxesCleared = 0;
     final int initialCount = min(15, maxLevelBalls);
     ballsSpawned = initialCount;
-    
+
     // Prepare Intro state: spawn initial balls queued behind the entrance line from color pool
     state = GameState.intro;
-    
+
     for (int i = 0; i < initialCount; i++) {
       final color = levelColorPool[colorPoolIndex++];
       final id = "init_${i}_${_random.nextInt(1000)}";
       double dist = -i * GameConstants.ballDiameter;
-      activeBalls.add(Ball(
-        id: id,
-        color: color,
-        distance: dist,
-        targetDistance: dist,
-        visualScale: 1.0,
-      ));
+      activeBalls.add(
+        Ball(
+          id: id,
+          color: color,
+          distance: dist,
+          targetDistance: dist,
+          visualScale: 1.0,
+        ),
+      );
       // Pre-cache position/angle
-      final posAngle = PathManager.getPositionAtDistance(dist, pathPoints, pathDistances);
+      final posAngle = PathManager.getPositionAtDistance(
+        dist,
+        pathPoints,
+        pathDistances,
+      );
       activeBalls.last.currentPos = posAngle.position;
       activeBalls.last.currentAngle = posAngle.angle;
     }
@@ -238,7 +241,7 @@ class GameController extends ChangeNotifier {
       requiredCount: currentLevelConfig.boxDemand,
       position: currentLevelConfig.scaledBoxPosition,
     );
-    
+
     _safeNotifyListeners();
   }
 
@@ -332,18 +335,26 @@ class GameController extends ChangeNotifier {
     // Ensure box target color is always solvable and valid (no remainder issues)
     if (state == GameState.playing && box != null && activeBalls.isNotEmpty) {
       final remainingDemand = box!.requiredCount - box!.currentCount;
-      if (!_isColorValidForBox(box!.targetColor, currentCount: box!.currentCount, remainingDemand: remainingDemand)) {
+      if (!_isColorValidForBox(
+        box!.targetColor,
+        currentCount: box!.currentCount,
+        remainingDemand: remainingDemand,
+      )) {
         // Before resetting, ensure there is AT LEAST ONE valid color available.
         // Otherwise, stick with the current color to avoid infinite flickering.
         final activeColors = activeBalls.map((b) => b.color).toSet().toList();
         bool hasAnyValid = false;
         for (var c in activeColors) {
-          if (_isColorValidForBox(c, currentCount: 0, remainingDemand: box!.requiredCount)) {
+          if (_isColorValidForBox(
+            c,
+            currentCount: 0,
+            remainingDemand: box!.requiredCount,
+          )) {
             hasAnyValid = true;
             break;
           }
         }
-        
+
         if (hasAnyValid) {
           box!.reset(_getRandomActiveColor(choosingNew: true));
         }
@@ -380,14 +391,16 @@ class GameController extends ChangeNotifier {
     }
 
     // Move head ball forward along the path rapidly (slither-in train entry)
-    final double dynamicMultiplier = currentLevelConfig.speedMultiplier + (currentLevelNumber * 0.04);
+    final double dynamicMultiplier =
+        currentLevelConfig.speedMultiplier + (currentLevelNumber * 0.04);
     final double introSpeed = 220.0 * dynamicMultiplier;
     final head = activeBalls.first;
     head.targetDistance += introSpeed * dt;
 
     // Follow the leader snap logic
     for (int i = 1; i < activeBalls.length; i++) {
-      activeBalls[i].targetDistance = activeBalls[i - 1].targetDistance - GameConstants.ballDiameter;
+      activeBalls[i].targetDistance =
+          activeBalls[i - 1].targetDistance - GameConstants.ballDiameter;
     }
 
     // Smoothly interpolate each ball's position
@@ -401,7 +414,11 @@ class GameController extends ChangeNotifier {
         ball.distance += diff * 0.15;
       }
 
-      final posAngle = PathManager.getPositionAtDistance(ball.distance, pathPoints, pathDistances);
+      final posAngle = PathManager.getPositionAtDistance(
+        ball.distance,
+        pathPoints,
+        pathDistances,
+      );
       ball.currentPos = posAngle.position;
       ball.currentAngle = posAngle.angle;
     }
@@ -431,14 +448,16 @@ class GameController extends ChangeNotifier {
       }
     } else {
       // Move head ball forward along the path
-      final double dynamicMultiplier = currentLevelConfig.speedMultiplier + (currentLevelNumber * 0.04);
+      final double dynamicMultiplier =
+          currentLevelConfig.speedMultiplier + (currentLevelNumber * 0.04);
       final double normalSpeed = 35.0 * dynamicMultiplier;
       final head = activeBalls.first;
       head.targetDistance += normalSpeed * dt;
 
       // Make all other balls follow the target distance of the ball in front
       for (int i = 1; i < activeBalls.length; i++) {
-        activeBalls[i].targetDistance = activeBalls[i - 1].targetDistance - GameConstants.ballDiameter;
+        activeBalls[i].targetDistance =
+            activeBalls[i - 1].targetDistance - GameConstants.ballDiameter;
       }
 
       // Smoothly interpolate each ball's physical position towards its target distance
@@ -454,13 +473,19 @@ class GameController extends ChangeNotifier {
         }
 
         // Cache positions for drawing and collision checks
-        final posAngle = PathManager.getPositionAtDistance(ball.distance, pathPoints, pathDistances);
+        final posAngle = PathManager.getPositionAtDistance(
+          ball.distance,
+          pathPoints,
+          pathDistances,
+        );
         ball.currentPos = posAngle.position;
         ball.currentAngle = posAngle.angle;
 
         // Apply scale effect for emerging balls
         if (ball.distance < 0) {
-          double visualScale = (ball.distance + GameConstants.ballRadius) / GameConstants.ballRadius;
+          double visualScale =
+              (ball.distance + GameConstants.ballRadius) /
+              GameConstants.ballRadius;
           ball.visualScale = visualScale.clamp(0.0, 1.0);
         } else {
           ball.visualScale = 1.0;
@@ -469,7 +494,8 @@ class GameController extends ChangeNotifier {
 
       // Spawn a new ball at the tail when the tail ball has moved far enough from the start
       final tail = activeBalls.last;
-      if (tail.distance > GameConstants.ballDiameter && ballsSpawned < maxLevelBalls) {
+      if (tail.distance > GameConstants.ballDiameter &&
+          ballsSpawned < maxLevelBalls) {
         _spawnNewBall(tail.targetDistance - GameConstants.ballDiameter);
       }
 
@@ -486,18 +512,25 @@ class GameController extends ChangeNotifier {
   void _spawnNewBall(double targetDist) {
     if (ballsSpawned >= maxLevelBalls) return;
     ballsSpawned++;
-    final id = DateTime.now().microsecondsSinceEpoch.toString() + "_${_random.nextInt(100)}";
+    final id =
+        "${DateTime.now().microsecondsSinceEpoch}_${_random.nextInt(100)}";
     final color = levelColorPool[colorPoolIndex++];
-    activeBalls.add(Ball(
-      id: id,
-      color: color,
-      distance: targetDist,
-      targetDistance: targetDist,
-      visualScale: 0.0,
-    ));
+    activeBalls.add(
+      Ball(
+        id: id,
+        color: color,
+        distance: targetDist,
+        targetDistance: targetDist,
+        visualScale: 0.0,
+      ),
+    );
   }
 
-  bool _isColorValidForBox(Color color, {required int currentCount, required int remainingDemand}) {
+  bool _isColorValidForBox(
+    Color color, {
+    required int currentCount,
+    required int remainingDemand,
+  }) {
     int activeCount = activeBalls.where((b) => b.color == color).length;
     int flyingCount = flyingBalls.where((b) => b.color == color).length;
     int totalAvailable = activeCount + flyingCount;
@@ -520,18 +553,27 @@ class GameController extends ChangeNotifier {
 
   Color _getRandomActiveColor({bool choosingNew = false}) {
     if (activeBalls.isEmpty) {
-      return GameConstants.getLevelColor(_random.nextInt(currentLevelConfig.colorCount), theme: currentTheme);
+      return GameConstants.getLevelColor(
+        _random.nextInt(currentLevelConfig.colorCount),
+        theme: currentTheme,
+      );
     }
 
     final boxDemand = currentLevelConfig.boxDemand;
     final currentCount = (box != null && !choosingNew) ? box!.currentCount : 0;
-    final remainingDemand = (box != null && !choosingNew) ? (box!.requiredCount - box!.currentCount) : boxDemand;
+    final remainingDemand = (box != null && !choosingNew)
+        ? (box!.requiredCount - box!.currentCount)
+        : boxDemand;
 
     List<Color> validColors = [];
     final activeColors = activeBalls.map((b) => b.color).toSet().toList();
 
     for (var color in activeColors) {
-      if (_isColorValidForBox(color, currentCount: currentCount, remainingDemand: remainingDemand)) {
+      if (_isColorValidForBox(
+        color,
+        currentCount: currentCount,
+        remainingDemand: remainingDemand,
+      )) {
         int activeCount = activeBalls.where((b) => b.color == color).length;
         if (activeCount >= remainingDemand) {
           validColors.add(color);
@@ -546,7 +588,11 @@ class GameController extends ChangeNotifier {
     // Fallback: If no color has enough balls on screen, pick any valid color
     List<Color> fallbackColors = [];
     for (var color in activeColors) {
-      if (_isColorValidForBox(color, currentCount: currentCount, remainingDemand: remainingDemand)) {
+      if (_isColorValidForBox(
+        color,
+        currentCount: currentCount,
+        remainingDemand: remainingDemand,
+      )) {
         fallbackColors.add(color);
       }
     }
@@ -585,25 +631,32 @@ class GameController extends ChangeNotifier {
       ball.distance += GameConstants.ballDiameter;
       ball.targetDistance += GameConstants.ballDiameter;
     }
-    
-    final id = DateTime.now().microsecondsSinceEpoch.toString() + "_${_random.nextInt(100)}";
-    activeBalls.add(Ball(
-      id: id,
-      color: color,
-      distance: 0.0,
-      targetDistance: 0.0,
-      visualScale: 1.0,
-    ));
-    
+
+    final id =
+        "${DateTime.now().microsecondsSinceEpoch}_${_random.nextInt(100)}";
+    activeBalls.add(
+      Ball(
+        id: id,
+        color: color,
+        distance: 0.0,
+        targetDistance: 0.0,
+        visualScale: 1.0,
+      ),
+    );
+
     // Set cached position instantly for smooth visual entry
-    final posAngle = PathManager.getPositionAtDistance(0.0, pathPoints, pathDistances);
+    final posAngle = PathManager.getPositionAtDistance(
+      0.0,
+      pathPoints,
+      pathDistances,
+    );
     activeBalls.last.currentPos = posAngle.position;
     activeBalls.last.currentAngle = posAngle.angle;
   }
 
   void _onBallLandedInBox(FlyingBall ball) {
     if (box == null) return;
-    
+
     score += 10;
     bool boxCompleted = box!.addBall();
 
@@ -639,18 +692,21 @@ class GameController extends ChangeNotifier {
 
       // Verifying if color matches the Box target color
       if (box != null && tappedBall.color == box!.targetColor) {
-        
-        int flyingOfTargetColor = flyingBalls.where((b) => b.color == box!.targetColor).length;
+        int flyingOfTargetColor = flyingBalls
+            .where((b) => b.color == box!.targetColor)
+            .length;
         int remainingDemand = box!.requiredCount - box!.currentCount;
 
         if (flyingOfTargetColor < remainingDemand) {
           // CORRECT TAP:
           HapticFeedback.lightImpact();
-          tapEffects.add(TapEffect(
-            position: tappedBall.currentPos,
-            color: Colors.white,
-            isCorrect: true,
-          ));
+          tapEffects.add(
+            TapEffect(
+              position: tappedBall.currentPos,
+              color: Colors.white,
+              isCorrect: true,
+            ),
+          );
 
           // DETACH FROM CHAIN
           activeBalls.removeAt(hitIndex);
@@ -664,10 +720,14 @@ class GameController extends ChangeNotifier {
           // Curve path: midpoint + perpendicular displacement
           final startPos = tappedBall.currentPos;
           double slotSpacing = 36.0;
-          double startX = box!.position.dx - ((box!.requiredCount - 1) * slotSpacing) / 2;
+          double startX =
+              box!.position.dx - ((box!.requiredCount - 1) * slotSpacing) / 2;
           // Calculate destination slot based on already filled + currently flying
           int targetSlotIndex = box!.currentCount + flyingOfTargetColor;
-          final endPos = Offset(startX + (targetSlotIndex * slotSpacing), box!.position.dy);
+          final endPos = Offset(
+            startX + (targetSlotIndex * slotSpacing),
+            box!.position.dy,
+          );
           final mid = (startPos + endPos) / 2;
           final dir = endPos - startPos;
           // Generate a random curve height offset to the left or right
@@ -675,32 +735,38 @@ class GameController extends ChangeNotifier {
           final perp = Offset(-dir.dy, dir.dx).normalize() * (70.0 * perpSign);
           final control = mid + perp;
 
-          flyingBalls.add(FlyingBall(
-            id: tappedBall.id,
-            color: tappedBall.color,
-            startPosition: startPos,
-            endPosition: endPos,
-            controlPoint: control,
-          ));
+          flyingBalls.add(
+            FlyingBall(
+              id: tappedBall.id,
+              color: tappedBall.color,
+              startPosition: startPos,
+              endPosition: endPos,
+              controlPoint: control,
+            ),
+          );
         } else {
           // WRONG TAP (Box already has enough balls flying towards it)
           HapticFeedback.vibrate();
           tappedBall.shakeTimer = 0.25;
-          tapEffects.add(TapEffect(
-            position: tappedBall.currentPos,
-            color: GameConstants.neonRed,
-            isCorrect: false,
-          ));
+          tapEffects.add(
+            TapEffect(
+              position: tappedBall.currentPos,
+              color: GameConstants.neonRed,
+              isCorrect: false,
+            ),
+          );
         }
       } else {
         // WRONG TAP:
         HapticFeedback.vibrate();
         tappedBall.shakeTimer = 0.25; // Subtle shake duration
-        tapEffects.add(TapEffect(
-          position: tappedBall.currentPos,
-          color: GameConstants.neonRed,
-          isCorrect: false,
-        ));
+        tapEffects.add(
+          TapEffect(
+            position: tappedBall.currentPos,
+            color: GameConstants.neonRed,
+            isCorrect: false,
+          ),
+        );
       }
     }
   }
@@ -734,13 +800,15 @@ class GameController extends ChangeNotifier {
     for (int i = 0; i < 15; i++) {
       final angle = _random.nextDouble() * pi * 2;
       final speed = 80.0 + _random.nextDouble() * 120.0;
-      particles.add(GameParticle(
-        position: origin,
-        velocity: Offset(cos(angle) * speed, sin(angle) * speed),
-        color: color.withOpacity(0.8),
-        size: 3.0 + _random.nextDouble() * 3.0,
-        maxLife: 0.4 + _random.nextDouble() * 0.3,
-      ));
+      particles.add(
+        GameParticle(
+          position: origin,
+          velocity: Offset(cos(angle) * speed, sin(angle) * speed),
+          color: color.withValues(alpha: 0.8),
+          size: 3.0 + _random.nextDouble() * 3.0,
+          maxLife: 0.4 + _random.nextDouble() * 0.3,
+        ),
+      );
     }
   }
 
@@ -751,14 +819,19 @@ class GameController extends ChangeNotifier {
       final speed = 120.0 + _random.nextDouble() * 200.0;
       final sparkColor = _random.nextBool()
           ? color
-          : GameConstants.getLevelColor(_random.nextInt(5), theme: currentTheme);
-      particles.add(GameParticle(
-        position: origin,
-        velocity: Offset(cos(angle) * speed, sin(angle) * speed),
-        color: sparkColor,
-        size: 4.0 + _random.nextDouble() * 5.0,
-        maxLife: 0.6 + _random.nextDouble() * 0.5,
-      ));
+          : GameConstants.getLevelColor(
+              _random.nextInt(5),
+              theme: currentTheme,
+            );
+      particles.add(
+        GameParticle(
+          position: origin,
+          velocity: Offset(cos(angle) * speed, sin(angle) * speed),
+          color: sparkColor,
+          size: 4.0 + _random.nextDouble() * 5.0,
+          maxLife: 0.6 + _random.nextDouble() * 0.5,
+        ),
+      );
     }
   }
 
@@ -768,13 +841,15 @@ class GameController extends ChangeNotifier {
     for (int i = 0; i < 50; i++) {
       final angle = _random.nextDouble() * pi * 2;
       final speed = 50.0 + _random.nextDouble() * 250.0;
-      particles.add(GameParticle(
-        position: headPos,
-        velocity: Offset(cos(angle) * speed, sin(angle) * speed),
-        color: Colors.redAccent,
-        size: 4.0 + _random.nextDouble() * 6.0,
-        maxLife: 0.8 + _random.nextDouble() * 0.6,
-      ));
+      particles.add(
+        GameParticle(
+          position: headPos,
+          velocity: Offset(cos(angle) * speed, sin(angle) * speed),
+          color: Colors.redAccent,
+          size: 4.0 + _random.nextDouble() * 6.0,
+          maxLife: 0.8 + _random.nextDouble() * 0.6,
+        ),
+      );
     }
   }
 
@@ -785,20 +860,26 @@ class GameController extends ChangeNotifier {
       final startY = -_random.nextDouble() * 100.0; // Spawn offscreen top
       final speedY = 100.0 + _random.nextDouble() * 150.0;
       final speedX = -40.0 + _random.nextDouble() * 80.0;
-      final confColor = GameConstants.getLevelColor(_random.nextInt(5), theme: currentTheme);
-      particles.add(GameParticle(
-        position: Offset(startX, startY),
-        velocity: Offset(speedX, speedY),
-        color: confColor,
-        size: 5.0 + _random.nextDouble() * 6.0,
-        maxLife: 2.0 + _random.nextDouble() * 1.5,
-        isConfetti: true,
-      ));
+      final confColor = GameConstants.getLevelColor(
+        _random.nextInt(5),
+        theme: currentTheme,
+      );
+      particles.add(
+        GameParticle(
+          position: Offset(startX, startY),
+          velocity: Offset(speedX, speedY),
+          color: confColor,
+          size: 5.0 + _random.nextDouble() * 6.0,
+          maxLife: 2.0 + _random.nextDouble() * 1.5,
+          isConfetti: true,
+        ),
+      );
     }
   }
 
   void _safeNotifyListeners() {
-    if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
       SchedulerBinding.instance.addPostFrameCallback((_) => notifyListeners());
     } else {
       notifyListeners();
@@ -887,11 +968,13 @@ class GameController extends ChangeNotifier {
       "germany": "GERMANY",
       "egypt": "EGYPT",
       "elephant": "ELEPHANT GRAVEYARD",
-    }
+    },
   };
 
   String translate(String key) {
-    return _translations[currentLanguage]?[key] ?? _translations["uz"]?[key] ?? key;
+    return _translations[currentLanguage]?[key] ??
+        _translations["uz"]?[key] ??
+        key;
   }
 }
 

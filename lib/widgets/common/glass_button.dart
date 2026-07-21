@@ -9,19 +9,20 @@ class GlassButton extends StatefulWidget {
   final Color color;
 
   const GlassButton({
-    Key? key,
+    super.key,
     required this.onTap,
     required this.child,
     this.borderRadius = 20.0,
     this.padding = const EdgeInsets.symmetric(horizontal: 24.0, vertical: 14.0),
     this.color = const Color(0x1AFFFFFF),
-  }) : super(key: key);
+  });
 
   @override
   _GlassButtonState createState() => _GlassButtonState();
 }
 
-class _GlassButtonState extends State<GlassButton> with SingleTickerProviderStateMixin {
+class _GlassButtonState extends State<GlassButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _btnController;
   late Animation<double> _scaleAnimation;
 
@@ -33,9 +34,10 @@ class _GlassButtonState extends State<GlassButton> with SingleTickerProviderStat
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _btnController, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _btnController, curve: Curves.easeInOut));
   }
 
   @override

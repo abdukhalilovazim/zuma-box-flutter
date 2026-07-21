@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class Ball {
   final String id;
   final Color color;
-  
+
   // Distances along the spline path
   double distance;
   double targetDistance;
@@ -11,8 +11,8 @@ class Ball {
   // Visual/Animation properties
   double visualScale; // Used for scale-up / spawn intro
   Offset currentPos = Offset.zero; // For caching position
-  double currentAngle = 0.0;       // For caching tangent angle
-  double shakeTimer = 0.0;         // For wrong-tap shake animation
+  double currentAngle = 0.0; // For caching tangent angle
+  double shakeTimer = 0.0; // For wrong-tap shake animation
 
   Ball({
     required this.id,

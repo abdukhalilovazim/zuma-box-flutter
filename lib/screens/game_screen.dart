@@ -8,7 +8,7 @@ import '../widgets/hud_widget.dart';
 import '../widgets/common/dynamic_background.dart';
 
 class GameScreen extends StatefulWidget {
-  const GameScreen({Key? key}) : super(key: key);
+  const GameScreen({super.key});
 
   @override
   State<GameScreen> createState() => _GameScreenState();
@@ -56,9 +56,7 @@ class _GameScreenState extends State<GameScreen> {
             children: [
               // Theme Background Image via DynamicBackground
               Positioned.fill(
-                child: const DynamicBackground(
-                  child: SizedBox.expand(),
-                ),
+                child: const DynamicBackground(child: SizedBox.expand()),
               ),
               // Interactive Canvas area (centered)
               Positioned(

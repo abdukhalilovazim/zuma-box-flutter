@@ -23,8 +23,6 @@ class GamePainter extends CustomPainter {
     // 2. Draw Spline Path (Flat Muted Guide Track)
     _drawPathTrack(canvas);
 
-
-
     // 4. Draw Active Ball Chain (with wrong-tap shake displacements)
     _drawActiveBalls(canvas);
 
@@ -43,12 +41,13 @@ class GamePainter extends CustomPainter {
     canvas.restore();
   }
 
-
-
   void _drawPathTrack(Canvas canvas) {
     if (controller.pathPoints.isEmpty) return;
 
-    final themeColor = GameConstants.getLevelColor(controller.currentLevelNumber - 1, theme: controller.currentTheme);
+    final themeColor = GameConstants.getLevelColor(
+      controller.currentLevelNumber - 1,
+      theme: controller.currentTheme,
+    );
 
     // Calculate warning path color shift (when chain is near the box)
     double warningIntensity = 0.0;
@@ -68,7 +67,11 @@ class GamePainter extends CustomPainter {
 
     if (warningAlpha > 0.0 && controller.trackPath != null) {
       final warningPaint = Paint()
-        ..color = Color.lerp(Colors.transparent, const Color(0x33FF0000), warningAlpha)!
+        ..color = Color.lerp(
+          Colors.transparent,
+          const Color(0x33FF0000),
+          warningAlpha,
+        )!
         ..style = PaintingStyle.stroke
         ..strokeWidth = 30.0
         ..strokeCap = StrokeCap.round
@@ -77,9 +80,13 @@ class GamePainter extends CustomPainter {
     }
 
     // 4. Draw Animated Flowing Energy Dots along the center of the track
-    Color centerLineColor = themeColor.withOpacity(0.45);
+    Color centerLineColor = themeColor.withValues(alpha: 0.45);
     if (warningAlpha > 0.0) {
-      centerLineColor = Color.lerp(centerLineColor, GameConstants.neonRed.withOpacity(0.85), warningAlpha)!;
+      centerLineColor = Color.lerp(
+        centerLineColor,
+        GameConstants.neonRed.withValues(alpha: 0.85),
+        warningAlpha,
+      )!;
     }
 
     final dotPaint = Paint()
@@ -91,8 +98,12 @@ class GamePainter extends CustomPainter {
     double offset = (controller.totalElapsedTime * speed) % dotSpacing;
 
     for (double d = offset; d < controller.totalPathLength; d += dotSpacing) {
-      final posAngle = PathManager.getPositionAtDistance(d, controller.pathPoints, controller.pathDistances);
-      
+      final posAngle = PathManager.getPositionAtDistance(
+        d,
+        controller.pathPoints,
+        controller.pathDistances,
+      );
+
       // Draw solid inner core
       canvas.drawCircle(posAngle.position, 2.5, dotPaint);
       canvas.drawCircle(posAngle.position, 1.8, dotPaint);
@@ -127,10 +138,11 @@ class GamePainter extends CustomPainter {
         double ghostT = flyBall.t - (i * 0.035);
         if (ghostT > 0.0) {
           double mt = 1.0 - ghostT;
-          final ghostPos = flyBall.startPosition * (mt * mt) +
+          final ghostPos =
+              flyBall.startPosition * (mt * mt) +
               flyBall.controlPoint * (2 * mt * ghostT) +
               flyBall.endPosition * (ghostT * ghostT);
-          
+
           double ghostBounce = sin(ghostT * pi) * 0.35;
           double ghostScale = (1.0 - (i * 0.15)) * (1.0 + ghostBounce);
           double ghostOpacity = 0.4 - (i * 0.12);
@@ -156,8 +168,15 @@ class GamePainter extends CustomPainter {
     double slotSpacing = 36.0 * box.bounceScale;
     double boxWidth = ((box.requiredCount - 1) * slotSpacing + 46.0);
     double boxHeight = 48.0 * box.bounceScale;
-    final cardRect = Rect.fromCenter(center: box.position, width: boxWidth, height: boxHeight);
-    final cardRRect = RRect.fromRectAndRadius(cardRect, const Radius.circular(14.0));
+    final cardRect = Rect.fromCenter(
+      center: box.position,
+      width: boxWidth,
+      height: boxHeight,
+    );
+    final cardRRect = RRect.fromRectAndRadius(
+      cardRect,
+      const Radius.circular(14.0),
+    );
 
     // 1. Draw subtle soft drop shadow behind the box card
     final shadowPaint = Paint()
@@ -166,7 +185,8 @@ class GamePainter extends CustomPainter {
     canvas.drawRRect(cardRRect.shift(const Offset(0.0, 3.0)), shadowPaint);
 
     // 2. Draw card background (frosted / matte surface)
-    final cardBgPaint = Paint()..color = const Color(0xFF1E1E2E).withOpacity(0.92);
+    final cardBgPaint = Paint()
+      ..color = const Color(0xFF1E1E2E).withValues(alpha: 0.92);
     canvas.drawRRect(cardRRect, cardBgPaint);
 
     // Card border outline (flat target color indicator)
@@ -177,7 +197,8 @@ class GamePainter extends CustomPainter {
     canvas.drawRRect(cardRRect, cardBorderPaint);
 
     // 3. Draw egg-box slots/cups inside the card
-    double startX = box.position.dx - ((box.requiredCount - 1) * slotSpacing) / 2;
+    double startX =
+        box.position.dx - ((box.requiredCount - 1) * slotSpacing) / 2;
     for (int i = 0; i < box.requiredCount; i++) {
       Offset slotPos = Offset(startX + (i * slotSpacing), box.position.dy);
       bool isFilled = i < box.currentCount;
@@ -194,14 +215,14 @@ class GamePainter extends CustomPainter {
 
         // Highlight ring of the cup pocket: colored to target color
         final cupRingPaint = Paint()
-          ..color = box.targetColor.withOpacity(0.35)
+          ..color = box.targetColor.withValues(alpha: 0.35)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.2;
         canvas.drawCircle(slotPos, 12.0 * box.bounceScale, cupRingPaint);
 
         // Small indicator dot inside the empty cup: bright solid target color
         final cupDotPaint = Paint()
-          ..color = box.targetColor.withOpacity(0.85)
+          ..color = box.targetColor.withValues(alpha: 0.85)
           ..style = PaintingStyle.fill;
         canvas.drawCircle(slotPos, 4.5 * box.bounceScale, cupDotPaint);
       }
@@ -210,7 +231,9 @@ class GamePainter extends CustomPainter {
     // 4. Clean white flash overlay on complete/land
     if (box.explosionOpacity > 0.0) {
       final flashPaint = Paint()
-        ..color = Colors.white.withOpacity(box.explosionOpacity.clamp(0.0, 1.0))
+        ..color = Colors.white.withValues(
+          alpha: box.explosionOpacity.clamp(0.0, 1.0),
+        )
         ..style = PaintingStyle.fill;
       canvas.drawRRect(cardRRect, flashPaint);
     }
@@ -223,7 +246,7 @@ class GamePainter extends CustomPainter {
         // Correct tap: clean white ring ripple
         double radius = GameConstants.ballRadius + (effect.t * 26.0);
         final paint = Paint()
-          ..color = Colors.white.withOpacity(opacity * 0.7)
+          ..color = Colors.white.withValues(alpha: opacity * 0.7)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.0;
         canvas.drawCircle(effect.position, radius, paint);
@@ -231,7 +254,7 @@ class GamePainter extends CustomPainter {
         // Wrong tap: subtle small ring ripple
         double radius = GameConstants.ballRadius + (effect.t * 12.0);
         final paint = Paint()
-          ..color = effect.color.withOpacity(opacity * 0.4)
+          ..color = effect.color.withValues(alpha: opacity * 0.4)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.5;
         canvas.drawCircle(effect.position, radius, paint);
@@ -241,12 +264,17 @@ class GamePainter extends CustomPainter {
 
   void _drawParticles(Canvas canvas) {
     for (var p in controller.particles) {
-      final paint = Paint()..color = p.color.withOpacity(p.opacity.clamp(0.0, 1.0));
+      final paint = Paint()
+        ..color = p.color.withValues(alpha: p.opacity.clamp(0.0, 1.0));
       if (p.isConfetti) {
         canvas.save();
         canvas.translate(p.position.dx, p.position.dy);
         canvas.rotate(p.life * pi * 4);
-        final rect = Rect.fromCenter(center: Offset.zero, width: p.size * 1.5, height: p.size);
+        final rect = Rect.fromCenter(
+          center: Offset.zero,
+          width: p.size * 1.5,
+          height: p.size,
+        );
         canvas.drawRect(rect, paint);
         canvas.restore();
       } else {
@@ -255,20 +283,30 @@ class GamePainter extends CustomPainter {
     }
   }
 
-  void _draw3DBall(Canvas canvas, Offset position, Color color, double scale, {double opacity = 1.0}) {
+  void _draw3DBall(
+    Canvas canvas,
+    Offset position,
+    Color color,
+    double scale, {
+    double opacity = 1.0,
+  }) {
     final double radius = GameConstants.ballRadius * scale;
     if (radius <= 0) return;
 
     // 1. Soft matte drop shadow offset below the ball
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.24 * opacity)
+      ..color = Colors.black.withValues(alpha: 0.24 * opacity)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
     canvas.drawCircle(position + const Offset(0.0, 2.5), radius, shadowPaint);
 
     // 2. Radial gradient for subtle flat 3D depth
     final hsl = HSLColor.fromColor(color);
-    final lightColor = hsl.withLightness((hsl.lightness + 0.05).clamp(0.0, 1.0)).toColor();
-    final darkColor = hsl.withLightness((hsl.lightness - 0.1).clamp(0.0, 1.0)).toColor();
+    final lightColor = hsl
+        .withLightness((hsl.lightness + 0.05).clamp(0.0, 1.0))
+        .toColor();
+    final darkColor = hsl
+        .withLightness((hsl.lightness - 0.1).clamp(0.0, 1.0))
+        .toColor();
 
     final paint = Paint()
       ..shader = RadialGradient(
@@ -285,7 +323,7 @@ class GamePainter extends CustomPainter {
 
     // Subtle dark border ring
     final borderPaint = Paint()
-      ..color = Colors.black.withOpacity(0.08 * opacity)
+      ..color = Colors.black.withValues(alpha: 0.08 * opacity)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5;
     canvas.drawCircle(position, radius, borderPaint);
