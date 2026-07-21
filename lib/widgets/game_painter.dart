@@ -84,21 +84,22 @@ class GamePainter extends CustomPainter {
     double warningAlpha = warningIntensity * pulse;
 
     final auraPaint = Paint()
-      ..color = GameConstants.neonRed.withValues(alpha: warningIntensity * 0.5 + 0.2)
+      ..color = GameConstants.neonRed.withValues(
+        alpha: warningIntensity * 0.5 + 0.2,
+      )
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15.0);
     canvas.drawCircle(endPos, endBaseRadius * 1.5, auraPaint);
 
     final portalPaint = Paint()
       ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF05050A),
-          const Color(0xFF250505),
-        ],
+        colors: [const Color(0xFF05050A), const Color(0xFF250505)],
       ).createShader(Rect.fromCircle(center: endPos, radius: endBaseRadius));
     canvas.drawCircle(endPos, endBaseRadius, portalPaint);
 
     final ringPaint = Paint()
-      ..color = GameConstants.neonRed.withValues(alpha: 0.6 + (warningAlpha * 0.4))
+      ..color = GameConstants.neonRed.withValues(
+        alpha: 0.6 + (warningAlpha * 0.4),
+      )
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
     canvas.drawCircle(endPos, endBaseRadius, ringPaint);
@@ -122,7 +123,7 @@ class GamePainter extends CustomPainter {
     }
     canvas.restore();
 
-    // (Warning intensity is calculated above now)
+    if (controller.cachedTrackPicture != null) {
       canvas.drawPicture(controller.cachedTrackPicture!);
     }
 
@@ -294,10 +295,7 @@ class GamePainter extends CustomPainter {
       textDirection: TextDirection.ltr,
     );
     textPainter.layout();
-    textPainter.paint(
-      canvas,
-      center + Offset(5, -textPainter.height / 2),
-    );
+    textPainter.paint(canvas, center + Offset(5, -textPainter.height / 2));
 
     // Flash overlay
     if (box.explosionOpacity > 0.0) {
