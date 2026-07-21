@@ -67,6 +67,24 @@ class GamePainter extends CustomPainter {
       ..strokeWidth = 3.0;
     canvas.drawCircle(startPos, 18.0, spawnBorder);
 
+    // Draw End Portal/Danger Hole at the end of the path
+    final endPos = controller.pathPoints.last;
+    final endShadow = Paint()
+      ..color = GameConstants.neonRed.withValues(alpha: 0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12.0);
+    canvas.drawCircle(endPos, 28.0, endShadow);
+
+    final endHole = Paint()
+      ..color = const Color(0xFF150505)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(endPos, 20.0, endHole);
+
+    final endBorder = Paint()
+      ..color = GameConstants.neonRed.withValues(alpha: 0.9)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0;
+    canvas.drawCircle(endPos, 20.0, endBorder);
+
     // Calculate warning path color shift (when chain is near the box)
     double warningIntensity = 0.0;
     if (controller.activeBalls.isNotEmpty) {

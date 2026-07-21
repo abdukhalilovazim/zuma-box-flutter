@@ -243,7 +243,7 @@ class GameController extends ChangeNotifier {
     box = BoxModel(
       targetColor: initialColor,
       requiredCount: currentLevelConfig.boxDemand,
-      position: currentLevelConfig.scaledBoxPosition,
+      position: const Offset(350, 110), // Fixed Top-Right corner UI
     );
 
     _safeNotifyListeners();
