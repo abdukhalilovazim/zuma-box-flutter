@@ -415,10 +415,9 @@ class GameController extends ChangeNotifier {
       return;
     }
 
-    // Move head ball forward along the path rapidly (slither-in train entry)
-    final double dynamicMultiplier =
-        currentLevelConfig.speedMultiplier + (currentLevelNumber * 0.04);
-    final double introSpeed = 220.0 * dynamicMultiplier;
+    // Base intro time is 4.0 seconds to slither in.
+    final double introTime = 4.0;
+    final double introSpeed = totalPathLength / introTime;
     final head = activeBalls.first;
     head.targetDistance += introSpeed * dt;
 
@@ -472,10 +471,12 @@ class GameController extends ChangeNotifier {
         return;
       }
     } else {
-      // Move head ball forward along the path
-      final double dynamicMultiplier =
-          currentLevelConfig.speedMultiplier + (currentLevelNumber * 0.04);
-      final double normalSpeed = 35.0 * dynamicMultiplier;
+      // Calculate normal speed based on totalPathLength so difficulty is consistent.
+      // Level 1: ~45 seconds to fail. Level 30: ~15 seconds to fail.
+      double traverseTime = 45.0 - (currentLevelNumber * 1.0);
+      traverseTime = traverseTime.clamp(15.0, 45.0);
+
+      final double normalSpeed = totalPathLength / traverseTime;
       final head = activeBalls.first;
       head.targetDistance += normalSpeed * dt;
 
