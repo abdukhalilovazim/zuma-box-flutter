@@ -67,37 +67,62 @@ class GamePainter extends CustomPainter {
       ..strokeWidth = 3.0;
     canvas.drawCircle(startPos, 18.0, spawnBorder);
 
-    // Draw End Portal/Danger Hole at the end of the path
+    // Draw Magical Portal at the end of the path (Danger Hole)
     final endPos = controller.pathPoints.last;
-    final endShadow = Paint()
-      ..color = GameConstants.neonRed.withValues(alpha: 0.3)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12.0);
-    canvas.drawCircle(endPos, 28.0, endShadow);
-
-    final endHole = Paint()
-      ..color = const Color(0xFF150505)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(endPos, 20.0, endHole);
-
-    final endBorder = Paint()
-      ..color = GameConstants.neonRed.withValues(alpha: 0.9)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
-    canvas.drawCircle(endPos, 20.0, endBorder);
+    final double endBaseRadius = 28.0;
 
     // Calculate warning path color shift (when chain is near the box)
     double warningIntensity = 0.0;
     if (controller.activeBalls.isNotEmpty) {
       double headDist = controller.activeBalls.first.distance;
       double distToBox = controller.totalPathLength - headDist;
-      if (distToBox < 160.0) {
-        warningIntensity = (1.0 - (distToBox / 160.0)).clamp(0.0, 1.0);
+      if (distToBox < 300.0 && distToBox > 0.0) {
+        warningIntensity = (1.0 - (distToBox / 300.0)).clamp(0.0, 1.0);
       }
     }
     double pulse = 0.6 + 0.4 * sin(controller.totalElapsedTime * 7.0);
     double warningAlpha = warningIntensity * pulse;
 
-    if (controller.cachedTrackPicture != null) {
+    final auraPaint = Paint()
+      ..color = GameConstants.neonRed.withValues(alpha: warningIntensity * 0.5 + 0.2)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15.0);
+    canvas.drawCircle(endPos, endBaseRadius * 1.5, auraPaint);
+
+    final portalPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFF05050A),
+          const Color(0xFF250505),
+        ],
+      ).createShader(Rect.fromCircle(center: endPos, radius: endBaseRadius));
+    canvas.drawCircle(endPos, endBaseRadius, portalPaint);
+
+    final ringPaint = Paint()
+      ..color = GameConstants.neonRed.withValues(alpha: 0.6 + (warningAlpha * 0.4))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawCircle(endPos, endBaseRadius, ringPaint);
+
+    // Rotating inner runic dashes
+    canvas.save();
+    canvas.translate(endPos.dx, endPos.dy);
+    canvas.rotate(controller.totalElapsedTime * 2.0);
+    final dashPaint = Paint()
+      ..color = GameConstants.neonRed.withValues(alpha: 0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0;
+    for (int i = 0; i < 6; i++) {
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset.zero, radius: endBaseRadius - 5),
+        i * (pi / 3),
+        pi / 6,
+        false,
+        dashPaint,
+      );
+    }
+    canvas.restore();
+
+    // (Warning intensity is calculated above now)
       canvas.drawPicture(controller.cachedTrackPicture!);
     }
 
@@ -233,96 +258,55 @@ class GamePainter extends CustomPainter {
     if (box == null) return;
 
     final center = box.position;
-    final double baseRadius = 32.0 * box.bounceScale;
 
-    // 1. Draw glowing aura ring around the portal
-    final auraPaint = Paint()
-      ..color = box.targetColor.withValues(alpha: 0.2)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15.0);
-    canvas.drawCircle(center, baseRadius * 1.5, auraPaint);
+    // Draw a sleek Glass HUD style container
+    final rect = Rect.fromCenter(center: center, width: 80, height: 44);
+    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(22));
 
-    // 2. Draw dark portal center (Void)
-    final portalPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [const Color(0xFF05050A), const Color(0xFF151525)],
-      ).createShader(Rect.fromCircle(center: center, radius: baseRadius));
-    canvas.drawCircle(center, baseRadius, portalPaint);
+    // Glass Background
+    final glassPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.1)
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(rrect, glassPaint);
 
-    // 3. Draw outer magical ring
-    final ringPaint = Paint()
-      ..color = box.targetColor.withValues(alpha: 0.6)
+    // Glass Border
+    final borderPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.25)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-    canvas.drawCircle(center, baseRadius, ringPaint);
+      ..strokeWidth = 1.5;
+    canvas.drawRRect(rrect, borderPaint);
 
-    // Rotating inner runic dashes
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(controller.totalElapsedTime * 2.0);
-    final dashPaint = Paint()
-      ..color = box.targetColor.withValues(alpha: 0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4.0;
-    for (int i = 0; i < 6; i++) {
-      canvas.drawArc(
-        Rect.fromCircle(center: Offset.zero, radius: baseRadius - 6),
-        i * (pi / 3),
-        pi / 6,
-        false,
-        dashPaint,
-      );
-    }
-    canvas.restore();
+    // Draw Target Gem
+    final gemPos = center - const Offset(20, 0);
+    _draw3DBall(canvas, gemPos, box.targetColor, 0.65 * box.bounceScale);
 
-    // 4. Draw floating crystals (slots) orbiting the portal
-    int count = box.requiredCount;
-    double orbitRadius = baseRadius + 16.0;
-    double startAngle = -pi / 2; // start from top
-    double angleStep = (2 * pi) / count;
+    // Draw Text "1/3"
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: '${box.currentCount} / ${box.requiredCount}',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16 * box.bounceScale,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'CupertinoSystemDisplay',
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      center + Offset(5, -textPainter.height / 2),
+    );
 
-    for (int i = 0; i < count; i++) {
-      double angle = startAngle + (i * angleStep);
-      Offset crystalPos =
-          center + Offset(cos(angle) * orbitRadius, sin(angle) * orbitRadius);
-
-      bool isFilled = i < box.currentCount;
-
-      if (isFilled) {
-        // Glowing filled crystal
-        _draw3DBall(
-          canvas,
-          crystalPos,
-          box.targetColor,
-          0.45 * box.bounceScale,
-        );
-        final glowPaint = Paint()
-          ..color = box.targetColor.withValues(alpha: 0.8)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
-        canvas.drawCircle(crystalPos, 6.0, glowPaint);
-      } else {
-        // Empty floating crystal slot (dim outline)
-        final emptyPaint = Paint()
-          ..color = box.targetColor.withValues(alpha: 0.4)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5;
-        canvas.drawCircle(crystalPos, 6.0 * box.bounceScale, emptyPaint);
-
-        // Small indicator dot
-        final dotPaint = Paint()
-          ..color = box.targetColor.withValues(alpha: 0.6)
-          ..style = PaintingStyle.fill;
-        canvas.drawCircle(crystalPos, 2.0 * box.bounceScale, dotPaint);
-      }
-    }
-
-    // 5. Clean white flash overlay on complete/land
+    // Flash overlay
     if (box.explosionOpacity > 0.0) {
       final flashPaint = Paint()
         ..color = Colors.white.withValues(
           alpha: box.explosionOpacity.clamp(0.0, 1.0),
         )
         ..style = PaintingStyle.fill;
-      canvas.drawCircle(center, baseRadius * 1.5, flashPaint);
+      canvas.drawRRect(rrect, flashPaint);
     }
   }
 
