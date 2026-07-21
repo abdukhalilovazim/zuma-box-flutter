@@ -106,8 +106,10 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
 
             // 2. Menu Content
             SafeArea(
-              child: Column(
-                children: [
+              child: SizedBox(
+                width: double.infinity,
+                child: Column(
+                  children: [
                   if (_menuState == MenuState.home) ...[
                     const Spacer(flex: 2),
 
@@ -197,51 +199,6 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                   ] else if (_menuState == MenuState.settings) ...[
                     // Settings View
                     const Spacer(flex: 1),
-                    Text(
-                      controller.translate('select_theme'),
-                      style: const TextStyle(
-                        color: Colors.white38,
-                        fontSize: 11.0,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2.0,
-                      ),
-                    ),
-                    const SizedBox(height: 12.0),
-                    Container(
-                      height: 120.0,
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        children: [
-                          _buildThemeCard(
-                            context,
-                            controller,
-                            "tokyo",
-                            "tokyo.png",
-                          ),
-                          _buildThemeCard(
-                            context,
-                            controller,
-                            "germany",
-                            "germany.png",
-                          ),
-                          _buildThemeCard(
-                            context,
-                            controller,
-                            "egypt",
-                            "egypt.png",
-                          ),
-                          _buildThemeCard(
-                            context,
-                            controller,
-                            "elephant",
-                            "elephant.png",
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 40.0),
                     Text(
                       "LANGUAGE",
                       style: const TextStyle(
@@ -440,53 +397,4 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildThemeCard(
-    BuildContext context,
-    GameController controller,
-    String themeKey,
-    String fileName,
-  ) {
-    final isSelected = controller.currentTheme == themeKey;
-    final themeName = controller.translate(themeKey);
-
-    return GestureDetector(
-      onTap: () {
-        controller.setTheme(themeKey);
-      },
-      child: GlassCard(
-        width: 140.0,
-        margin: const EdgeInsets.symmetric(horizontal: 8.0),
-        borderRadius: 16.0,
-        borderColor: isSelected ? Colors.white : Colors.white12,
-        borderWidth: isSelected ? 2.0 : 1.0,
-        padding: const EdgeInsets.all(0),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset(
-              "assets/images/themes/$fileName",
-              fit: BoxFit.cover,
-              colorBlendMode: isSelected ? null : BlendMode.darken,
-              color: isSelected ? null : Colors.black.withValues(alpha: 0.5),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: Text(
-                  themeName,
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.white70,
-                    fontSize: 10.0,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.0,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

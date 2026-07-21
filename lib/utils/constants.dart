@@ -47,11 +47,11 @@ class GameConstants {
       Color(0xFFD2B48C),
     ], // Desert, gold, teal
     "elephant": [
-      Color(0xFF8A9A5B),
-      Color(0xFF556B2F),
-      Color(0xFF708090),
-      Color(0xFF8B4513),
-      Color(0xFF2F4F4F),
+      Color(0xFFE0115F), // Ruby Red
+      Color(0xFFFFBF00), // Bright Amber
+      Color(0xFF007FFF), // Azure Blue
+      Color(0xFFB565A7), // Radiant Orchid
+      Color(0xFFF8F8FF), // Crisp White
     ], // Jungle, grey, brown
   };
 

@@ -186,6 +186,10 @@ class GameController extends ChangeNotifier {
       orElse: () => levels.first,
     );
 
+    // Automatically set theme based on level
+    final themeKeys = ["tokyo", "germany", "egypt", "elephant"];
+    currentTheme = themeKeys[(levelNum - 1) % themeKeys.length];
+
     // Generate spline path using SCALED control points to prevent clipping
     pathPoints = PathManager.generateSmoothPath(
       currentLevelConfig.scaledControlPoints,
