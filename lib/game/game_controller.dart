@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;
 import '../models/ball.dart';
 import '../models/box.dart';
@@ -78,6 +79,7 @@ class GameController extends ChangeNotifier {
 
   // Game State
   GameState state = GameState.paused;
+  bool isTutorialActive = false;
   int score = 0;
   int boxesCleared = 0;
   int ballsSpawned = 0;
@@ -201,6 +203,7 @@ class GameController extends ChangeNotifier {
 
     // Generate color pool
     _generateLevelColorPool();
+    _checkTutorial();
 
     // Reset game counters
     activeBalls.clear();
@@ -243,9 +246,27 @@ class GameController extends ChangeNotifier {
     box = BoxModel(
       targetColor: initialColor,
       requiredCount: currentLevelConfig.boxDemand,
-      position: const Offset(350, 110), // Fixed Top-Right corner UI
+      position: const Offset(80, 630), // Fixed Bottom-Left corner UI
     );
 
+    _safeNotifyListeners();
+  }
+
+  Future<void> _checkTutorial() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool hasSeen = prefs.getBool('hasSeenTutorial') ?? false;
+    if (!hasSeen && currentLevelNumber == 1) {
+      isTutorialActive = true;
+      pauseGame();
+      _safeNotifyListeners();
+    }
+  }
+
+  Future<void> completeTutorial() async {
+    isTutorialActive = false;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasSeenTutorial', true);
+    resumeGame();
     _safeNotifyListeners();
   }
 
