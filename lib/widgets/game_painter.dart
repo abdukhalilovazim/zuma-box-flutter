@@ -325,7 +325,7 @@ class GamePainter extends CustomPainter {
     }
 
     // --- DRAW SCORE UI (Right Side) ---
-    final Offset scorePos = Offset(GameConstants.logicalWidth - 65, startY);
+    final Offset scorePos = Offset(GameConstants.logicalWidth - 75, startY);
 
     // Sleek glass pill for score
     final rect = Rect.fromCenter(center: scorePos, width: 90, height: 44);
