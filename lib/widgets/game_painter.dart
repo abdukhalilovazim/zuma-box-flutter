@@ -262,10 +262,10 @@ class GamePainter extends CustomPainter {
     final box = controller.box;
     if (box == null) return;
 
-    final double startY = GameConstants.logicalHeight - 45.0;
+    final double startY = GameConstants.logicalHeight - 75.0;
 
     // --- DRAW BOX UI (Left Side) ---
-    final Offset boxPos = Offset(60, startY);
+    final Offset boxPos = Offset(70, startY);
     // Update model position purely for logic so balls fly to the correct spot
     box.position = boxPos;
 
