@@ -116,84 +116,86 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
           SafeArea(
             child: Column(
               children: [
-                const Spacer(flex: 2),
 
-                // Pulsing Logo
-                AnimatedBuilder(
-                  animation: _glowController,
-                  builder: (context, child) {
-                    return Column(
-                      children: [
-                        Text(
-                          "ZUMA",
-                          style: TextStyle(
-                            fontSize: 66.0,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 8.0,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withOpacity(0.3),
-                                offset: const Offset(0.0, 4.0),
-                                blurRadius: 8.0,
-                              ),
-                            ],
+
+                if (_menuState == MenuState.home) ...[
+                  const Spacer(flex: 2),
+
+                  // Pulsing Logo
+                  AnimatedBuilder(
+                    animation: _glowController,
+                    builder: (context, child) {
+                      return Column(
+                        children: [
+                          Text(
+                            "ZUMA",
+                            style: TextStyle(
+                              fontSize: 66.0,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 8.0,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  offset: const Offset(0.0, 4.0),
+                                  blurRadius: 8.0,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                          Text(
+                            "BOX",
+                            style: TextStyle(
+                              fontSize: 38.0,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 6.0,
+                              color: GameConstants.neonText,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  offset: const Offset(0.0, 4.0),
+                                  blurRadius: 8.0,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 24.0),
+
+                  // Best Score Banner
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.04),
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(
+                        color: GameConstants.neonText.withOpacity(0.15),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.emoji_events_rounded, color: Colors.amberAccent, size: 18),
+                        const SizedBox(width: 8),
                         Text(
-                          "BOX",
-                          style: TextStyle(
-                            fontSize: 38.0,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 6.0,
-                            color: GameConstants.neonText,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withOpacity(0.3),
-                                offset: const Offset(0.0, 4.0),
-                                blurRadius: 8.0,
-                              ),
-                            ],
+                          "${controller.translate('best_score')}: $bestScore",
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13.0,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: "monospace",
+                            letterSpacing: 1.0,
                           ),
                         ),
                       ],
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 24.0),
-
-                // Best Score Banner
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.04),
-                    borderRadius: BorderRadius.circular(20.0),
-                    border: Border.all(
-                      color: GameConstants.neonText.withOpacity(0.15),
-                      width: 1.0,
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.emoji_events_rounded, color: Colors.amberAccent, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        "${controller.translate('best_score')}: $bestScore",
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 13.0,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: "monospace",
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
 
-                if (_menuState == MenuState.home) ...[
                   const Spacer(flex: 2),
 
                   // Pulsing Play Button
@@ -284,6 +286,16 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                   const Spacer(flex: 3),
                 ] else if (_menuState == MenuState.levels) ...[
                   // Level Select Section
+                  const Spacer(flex: 1),
+                  Text(
+                    "ZUMA BOX",
+                    style: TextStyle(
+                      color: Colors.white12,
+                      fontSize: 32.0,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 4.0,
+                    ),
+                  ),
                   const Spacer(flex: 1),
                   Text(
                     controller.translate('select_level'),
