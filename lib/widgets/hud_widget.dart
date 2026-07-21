@@ -59,21 +59,27 @@ class HudWidget extends StatelessWidget {
                       ],
                     ),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Level Info
+                        // Left spacer to keep center aligned
+                        const SizedBox(width: 32.0),
+
+                        // Center Level Info
                         Expanded(
-                          child: Text(
-                            "${controller.translate('level')} ${controller.currentLevelNumber}  •  ${(controller.maxLevelBalls - controller.ballsSpawned).clamp(0, controller.maxLevelBalls)} ${controller.translate('left')}",
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14.0,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
+                          child: Center(
+                            child: Text(
+                              "${controller.translate('level')} ${controller.currentLevelNumber}  •  ${(controller.maxLevelBalls - controller.ballsSpawned).clamp(0, controller.maxLevelBalls)} ${controller.translate('left')}",
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.0,
+                              ),
                             ),
                           ),
                         ),
 
-                        // Center Pause Button (Frosted dark circle)
+                        // Right Pause Button (Frosted dark circle)
                         GestureDetector(
                           onTap: () {
                             controller.pauseGame();
@@ -104,9 +110,6 @@ class HudWidget extends StatelessWidget {
                             ),
                           ),
                         ),
-
-                        // Score Pop counter
-                        Expanded(child: ScoreText(score: controller.score)),
                       ],
                     ),
                   ),
@@ -115,6 +118,79 @@ class HudWidget extends StatelessWidget {
             ),
           ),
         ),
+
+        // Score display (Bottom Right)
+        Positioned(
+          bottom: 20.0,
+          right: 20.0,
+          child: SafeArea(child: ScoreText(score: controller.score)),
+        ),
+
+        // Tutorial Overlay
+        if (controller.isTutorialActive)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withValues(alpha: 0.65),
+              child: Stack(
+                children: [
+                  // Animated pointing finger/arrow (Mocked with icon)
+                  Positioned(
+                    bottom: 150.0,
+                    left: 90.0,
+                    child: Column(
+                      children: [
+                        const Icon(
+                          Icons.touch_app,
+                          color: Colors.white,
+                          size: 60.0,
+                        ),
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white30),
+                          ),
+                          child: const Text(
+                            "Tap the ball matching\nthe portal's color!",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 50.0,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: GlassButton(
+                        onTap: () => controller.completeTutorial(),
+                        color: GameConstants.neonBlue.withValues(alpha: 0.8),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 40.0),
+                          child: Text(
+                            "GOT IT!",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
 
         // 2. Pause Screen Overlay
         if (controller.state == GameState.paused)
