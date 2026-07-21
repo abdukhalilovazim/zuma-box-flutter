@@ -7,6 +7,8 @@ class GlassButton extends StatefulWidget {
   final double borderRadius;
   final EdgeInsetsGeometry padding;
   final Color color;
+  final Color borderColor;
+  final double borderWidth;
 
   const GlassButton({
     super.key,
@@ -15,6 +17,8 @@ class GlassButton extends StatefulWidget {
     this.borderRadius = 20.0,
     this.padding = const EdgeInsets.symmetric(horizontal: 24.0, vertical: 14.0),
     this.color = const Color(0x1AFFFFFF),
+    this.borderColor = const Color(0x33FFFFFF),
+    this.borderWidth = 1.0,
   });
 
   @override
@@ -64,6 +68,8 @@ class _GlassButtonState extends State<GlassButton>
               borderRadius: widget.borderRadius,
               padding: widget.padding,
               color: widget.color,
+              borderColor: widget.borderColor,
+              borderWidth: widget.borderWidth,
               child: widget.child,
             ),
           );

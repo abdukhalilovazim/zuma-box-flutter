@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../game/game_controller.dart';
 import 'package:provider/provider.dart';
-import 'background_painters.dart';
+import '../../theme/background_painters.dart';
 
 class DynamicBackground extends StatefulWidget {
   final Widget child;
