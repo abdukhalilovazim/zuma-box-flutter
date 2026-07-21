@@ -5,6 +5,8 @@ import '../game/game_controller.dart';
 import '../utils/constants.dart';
 import 'game_screen.dart';
 
+enum MenuState { home, levels, settings }
+
 class MenuScreen extends StatefulWidget {
   const MenuScreen({Key? key}) : super(key: key);
 
@@ -15,6 +17,7 @@ class MenuScreen extends StatefulWidget {
 class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
   late AnimationController _glowController;
   late AnimationController _bgController;
+  MenuState _menuState = MenuState.home;
 
   @override
   void initState() {
@@ -58,47 +61,53 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
             },
           ),
 
-          // Language Selector at Top Right
+          // Top Right Controls (Settings or Back)
           Positioned(
             top: 20.0,
             right: 20.0,
+            left: 20.0,
             child: SafeArea(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.06),
-                  borderRadius: BorderRadius.circular(20.0),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.1),
-                    width: 1.0,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: ["UZ", "RU", "EN"].map((lang) {
-                    final isSelected = controller.currentLanguage == lang.toLowerCase();
-                    return GestureDetector(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (_menuState != MenuState.home)
+                    GestureDetector(
                       onTap: () {
-                        controller.setLanguage(lang.toLowerCase());
+                        setState(() {
+                          _menuState = MenuState.home;
+                        });
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                        padding: const EdgeInsets.all(10.0),
                         decoration: BoxDecoration(
-                          color: isSelected ? GameConstants.neonText : Colors.transparent,
-                          borderRadius: BorderRadius.circular(14.0),
+                          color: Colors.white.withOpacity(0.06),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withOpacity(0.1)),
                         ),
-                        child: Text(
-                          lang,
-                          style: TextStyle(
-                            color: isSelected ? const Color(0xFF12121F) : Colors.white70,
-                            fontSize: 11.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70, size: 20),
                       ),
-                    );
-                  }).toList(),
-                ),
+                    )
+                  else
+                    const SizedBox(),
+
+                  if (_menuState == MenuState.home)
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _menuState = MenuState.settings;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(10.0),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.06),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        child: const Icon(Icons.settings_rounded, color: Colors.white70, size: 24),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -184,172 +193,217 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                   ),
                 ),
 
-                const Spacer(flex: 2),
+                if (_menuState == MenuState.home) ...[
+                  const Spacer(flex: 2),
 
-                // Pulsing Play Button
-                MenuPlayButton(
-                  onTap: () {
-                    final latestLevel = unlockedLevels.isNotEmpty
-                        ? unlockedLevels.reduce((a, b) => a > b ? a : b)
-                        : 1;
-                    controller.startLevel(latestLevel);
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const GameScreen()),
-                    );
-                  },
-                ),
-
-                const Spacer(flex: 1),
-
-                // Theme Select Section
-                Text(
-                  controller.translate('select_theme'),
-                  style: const TextStyle(
-                    color: Colors.white38,
-                    fontSize: 11.0,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2.0,
+                  // Pulsing Play Button
+                  MenuPlayButton(
+                    onTap: () {
+                      setState(() {
+                        _menuState = MenuState.levels;
+                      });
+                    },
                   ),
-                ),
-                const SizedBox(height: 12.0),
 
-                // Theme Horizontal List
-                Container(
-                  height: 90.0,
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    children: [
-                      _buildThemeCard(context, controller, "tokyo", "tokyo.png"),
-                      _buildThemeCard(context, controller, "germany", "germany.png"),
-                      _buildThemeCard(context, controller, "egypt", "egypt.png"),
-                      _buildThemeCard(context, controller, "elephant", "elephant.png"),
-                    ],
-                  ),
-                ),
-
-                const Spacer(flex: 1),
-
-                // Level Select Section
-                Text(
-                  controller.translate('select_level'),
-                  style: const TextStyle(
-                    color: Colors.white38,
-                    fontSize: 11.0,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2.0,
-                  ),
-                ),
-                const SizedBox(height: 16.0),
-
-                // Level Grid
-                Container(
-                  height: 140.0,
-                  padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                  child: ScrollConfiguration(
-                    behavior: const ScrollBehavior().copyWith(overscroll: false),
-                    child: GridView.builder(
-                      physics: const BouncingScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 5,
-                        mainAxisSpacing: 12.0,
-                        crossAxisSpacing: 12.0,
-                        childAspectRatio: 1.0,
-                      ),
-                      itemCount: 30,
-                      itemBuilder: (context, index) {
-                        final levelNum = index + 1;
-                        final isUnlocked = unlockedLevels.contains(levelNum);
-                        final levelColor = GameConstants.getLevelColor(index % 5, theme: controller.currentTheme);
-
-                        final isCompleted = completedLevels.contains(levelNum);
-
-                        return GestureDetector(
-                          onTap: isUnlocked
-                              ? () {
-                                  controller.startLevel(levelNum);
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const GameScreen()),
-                                  );
-                                }
-                              : null,
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: isUnlocked ? GameConstants.cardBg : Colors.black38,
-                                  borderRadius: BorderRadius.circular(15.0),
-                                  border: Border.all(
-                                    color: isCompleted
-                                        ? GameConstants.neonGreen.withOpacity(0.85)
-                                        : (isUnlocked
-                                            ? const Color(0xFF2C2C3E)
-                                            : Colors.white10),
-                                    width: isCompleted ? 2.0 : 1.5,
-                                  ),
-                                  boxShadow: isUnlocked
-                                      ? [
-                                          BoxShadow(
-                                            color: isCompleted
-                                                ? GameConstants.neonGreen.withOpacity(0.2)
-                                                : Colors.black.withOpacity(0.15),
-                                            blurRadius: 6.0,
-                                            offset: const Offset(0.0, 2.0),
-                                          )
-                                        ]
-                                      : [],
-                                ),
-                                child: Center(
-                                  child: isUnlocked
-                                      ? Text(
-                                          "$levelNum",
-                                          style: TextStyle(
-                                            color: isCompleted ? GameConstants.neonGreen : levelColor,
-                                            fontSize: 18.0,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        )
-                                      : const Icon(
-                                          Icons.lock_rounded,
-                                          color: Colors.white24,
-                                          size: 18.0,
-                                        ),
-                                ),
-                              ),
-                              if (isCompleted)
-                                Positioned(
-                                  top: -4.0,
-                                  right: -4.0,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(1.5),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.amber,
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black26,
-                                          blurRadius: 4.0,
-                                        )
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.star_rounded,
-                                      color: Colors.white,
-                                      size: 10.0,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        );
-                      },
+                  const Spacer(flex: 3),
+                ] else if (_menuState == MenuState.settings) ...[
+                  // Settings View
+                  const Spacer(flex: 1),
+                  Text(
+                    controller.translate('select_theme'),
+                    style: const TextStyle(
+                      color: Colors.white38,
+                      fontSize: 11.0,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2.0,
                     ),
                   ),
-                ),
+                  const SizedBox(height: 12.0),
+                  Container(
+                    height: 120.0,
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      children: [
+                        _buildThemeCard(context, controller, "tokyo", "tokyo.png"),
+                        _buildThemeCard(context, controller, "germany", "germany.png"),
+                        _buildThemeCard(context, controller, "egypt", "egypt.png"),
+                        _buildThemeCard(context, controller, "elephant", "elephant.png"),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 40.0),
+                  Text(
+                    "LANGUAGE",
+                    style: const TextStyle(
+                      color: Colors.white38,
+                      fontSize: 11.0,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                  const SizedBox(height: 12.0),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.1),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: ["UZ", "RU", "EN"].map((lang) {
+                        final isSelected = controller.currentLanguage == lang.toLowerCase();
+                        return GestureDetector(
+                          onTap: () {
+                            controller.setLanguage(lang.toLowerCase());
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+                            decoration: BoxDecoration(
+                              color: isSelected ? GameConstants.neonText : Colors.transparent,
+                              borderRadius: BorderRadius.circular(14.0),
+                            ),
+                            child: Text(
+                              lang,
+                              style: TextStyle(
+                                color: isSelected ? const Color(0xFF12121F) : Colors.white70,
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const Spacer(flex: 3),
+                ] else if (_menuState == MenuState.levels) ...[
+                  // Level Select Section
+                  const Spacer(flex: 1),
+                  Text(
+                    controller.translate('select_level'),
+                    style: const TextStyle(
+                      color: Colors.white38,
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                  const SizedBox(height: 24.0),
 
-                const Spacer(flex: 2),
+                  // Level Grid
+                  Expanded(
+                    flex: 5,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: ScrollConfiguration(
+                        behavior: const ScrollBehavior().copyWith(overscroll: false),
+                        child: GridView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 5,
+                            mainAxisSpacing: 16.0,
+                            crossAxisSpacing: 16.0,
+                            childAspectRatio: 1.0,
+                          ),
+                          itemCount: 30,
+                          itemBuilder: (context, index) {
+                            final levelNum = index + 1;
+                            final isUnlocked = unlockedLevels.contains(levelNum);
+                            final levelColor = GameConstants.getLevelColor(index % 5, theme: controller.currentTheme);
+
+                            final isCompleted = completedLevels.contains(levelNum);
+
+                            return GestureDetector(
+                              onTap: isUnlocked
+                                  ? () {
+                                      controller.startLevel(levelNum);
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(builder: (_) => const GameScreen()),
+                                      );
+                                    }
+                                  : null,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: isUnlocked ? GameConstants.cardBg : Colors.black38,
+                                      borderRadius: BorderRadius.circular(15.0),
+                                      border: Border.all(
+                                        color: isCompleted
+                                            ? GameConstants.neonGreen.withOpacity(0.85)
+                                            : (isUnlocked
+                                                ? const Color(0xFF2C2C3E)
+                                                : Colors.white10),
+                                        width: isCompleted ? 2.0 : 1.5,
+                                      ),
+                                      boxShadow: isUnlocked
+                                          ? [
+                                              BoxShadow(
+                                                color: isCompleted
+                                                    ? GameConstants.neonGreen.withOpacity(0.2)
+                                                    : Colors.black.withOpacity(0.15),
+                                                blurRadius: 6.0,
+                                                offset: const Offset(0.0, 2.0),
+                                              )
+                                            ]
+                                          : [],
+                                    ),
+                                    child: Center(
+                                      child: isUnlocked
+                                          ? Text(
+                                              "$levelNum",
+                                              style: TextStyle(
+                                                color: isCompleted ? GameConstants.neonGreen : levelColor,
+                                                fontSize: 18.0,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            )
+                                          : const Icon(
+                                              Icons.lock_rounded,
+                                              color: Colors.white24,
+                                              size: 18.0,
+                                            ),
+                                    ),
+                                  ),
+                                  if (isCompleted)
+                                    Positioned(
+                                      top: -4.0,
+                                      right: -4.0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(1.5),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.amber,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black26,
+                                              blurRadius: 4.0,
+                                            )
+                                          ],
+                                        ),
+                                        child: const Icon(
+                                          Icons.star_rounded,
+                                          color: Colors.white,
+                                          size: 10.0,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
