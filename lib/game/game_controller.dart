@@ -203,7 +203,6 @@ class GameController extends ChangeNotifier {
 
     // Generate color pool
     _generateLevelColorPool();
-    _checkTutorial();
 
     // Reset game counters
     activeBalls.clear();
@@ -450,6 +449,7 @@ class GameController extends ChangeNotifier {
     // When the last ball is completely on the visible path, start playing!
     if (activeBalls.last.distance >= 0.0) {
       state = GameState.playing;
+      _checkTutorial();
     }
   }
 

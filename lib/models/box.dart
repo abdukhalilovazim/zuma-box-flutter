@@ -4,7 +4,7 @@ class BoxModel {
   Color targetColor;
   int currentCount;
   final int requiredCount;
-  final Offset position;
+  Offset position;
 
   // Visual/Animation States
   double bounceScale = 1.0;

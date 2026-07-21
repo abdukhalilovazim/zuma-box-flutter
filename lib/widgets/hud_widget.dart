@@ -127,38 +127,6 @@ class HudWidget extends StatelessWidget {
               color: Colors.black.withValues(alpha: 0.65),
               child: Stack(
                 children: [
-                  // Animated pointing finger/arrow (Mocked with icon)
-                  Positioned(
-                    bottom: 150.0,
-                    left: 90.0,
-                    child: Column(
-                      children: [
-                        const Icon(
-                          Icons.touch_app,
-                          color: Colors.white,
-                          size: 60.0,
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white30),
-                          ),
-                          child: const Text(
-                            "Tap the ball matching\nthe portal's color!",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   Positioned(
                     bottom: 50.0,
                     left: 0,
