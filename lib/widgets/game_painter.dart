@@ -125,8 +125,8 @@ class GamePainter extends CustomPainter {
 
         // Add Warning Glow for balls near the box
         double distToBox = controller.totalPathLength - ball.distance;
-        if (distToBox < 160.0 && distToBox > 0.0) {
-          double warningIntensity = (1.0 - (distToBox / 160.0)).clamp(0.0, 1.0);
+        if (distToBox < 300.0 && distToBox > 0.0) {
+          double warningIntensity = (1.0 - (distToBox / 300.0)).clamp(0.0, 1.0);
           double pulse = 0.5 + 0.5 * sin(controller.totalElapsedTime * 10.0);
           double glowAlpha = warningIntensity * pulse * 0.8;
 

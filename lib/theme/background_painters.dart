@@ -255,11 +255,16 @@ class ElephantPainter extends ParallaxBackgroundPainter {
   ) {
     final path = Path();
     path.moveTo(offsetX, 0);
-    double step = 60.0;
+    double step = 80.0;
     Random rnd = Random(88);
     for (double x = offsetX; x <= offsetX + size.width + step; x += step) {
-      double ch = size.height * heightRatio * (0.5 + rnd.nextDouble() * 0.5);
-      path.quadraticBezierTo(x - step / 2, ch, x, 0);
+      double ch = size.height * heightRatio * (0.6 + rnd.nextDouble() * 0.4);
+      // Use cubic bezier for rounded leafy canopy
+      path.cubicTo(
+        x - step * 0.75, ch, 
+        x - step * 0.25, ch, 
+        x, 0
+      );
     }
     path.close();
     canvas.drawPath(path, paint);
