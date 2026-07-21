@@ -123,9 +123,7 @@ class HudWidget extends StatelessWidget {
         // Tutorial Overlay
         if (controller.isTutorialActive)
           Positioned.fill(
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.65),
-              child: Stack(
+            child: Stack(
                 children: [
                   Positioned(
                     bottom: 50.0,
@@ -152,7 +150,6 @@ class HudWidget extends StatelessWidget {
                 ],
               ),
             ),
-          ),
 
         // 2. Pause Screen Overlay
         if (controller.state == GameState.paused)
