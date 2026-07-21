@@ -119,13 +119,7 @@ class HudWidget extends StatelessWidget {
           ),
         ),
 
-        // Score display (Bottom Right)
-        Positioned(
-          bottom: 20.0,
-          right: 20.0,
-          child: SafeArea(child: ScoreText(score: controller.score)),
-        ),
-
+        // (Score display moved to GamePainter for perfect alignment with Box)
         // Tutorial Overlay
         if (controller.isTutorialActive)
           Positioned.fill(

@@ -258,44 +258,57 @@ class GamePainter extends CustomPainter {
     final box = controller.box;
     if (box == null) return;
 
-    final center = box.position;
+    final double startY = GameConstants.logicalHeight - 45.0;
 
-    // Draw a sleek Glass HUD style container
-    final rect = Rect.fromCenter(center: center, width: 80, height: 44);
-    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(22));
+    // --- DRAW BOX UI (Left Side) ---
+    final Offset boxPos = Offset(60, startY);
+    // Update model position purely for logic so balls fly to the correct spot
+    box.position = boxPos;
 
-    // Glass Background
-    final glassPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.1)
-      ..style = PaintingStyle.fill;
-    canvas.drawRRect(rrect, glassPaint);
-
-    // Glass Border
-    final borderPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.25)
+    // Sleek glowing Ring for Box
+    final double radius = 28.0;
+    final ringPaint = Paint()
+      ..color = box.targetColor.withValues(alpha: 0.3)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    canvas.drawRRect(rrect, borderPaint);
+      ..strokeWidth = 4.0;
+    canvas.drawCircle(boxPos, radius, ringPaint);
 
-    // Draw Target Gem
-    final gemPos = center - const Offset(20, 0);
-    _draw3DBall(canvas, gemPos, box.targetColor, 0.65 * box.bounceScale);
+    // Progress Arc
+    final double progress = box.currentCount / box.requiredCount;
+    final progressPaint = Paint()
+      ..color = box.targetColor
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 5.0;
+    canvas.drawArc(
+      Rect.fromCircle(center: boxPos, radius: radius),
+      -pi / 2,
+      2 * pi * progress,
+      false,
+      progressPaint,
+    );
 
-    // Draw Text "1/3"
+    // Inner Gem
+    _draw3DBall(canvas, boxPos, box.targetColor, 0.75 * box.bounceScale);
+
+    // Text "1/3" below the ring
     final textPainter = TextPainter(
       text: TextSpan(
         text: '${box.currentCount} / ${box.requiredCount}',
         style: TextStyle(
           color: Colors.white,
-          fontSize: 16 * box.bounceScale,
-          fontWeight: FontWeight.w600,
+          fontSize: 14 * box.bounceScale,
+          fontWeight: FontWeight.bold,
           fontFamily: 'CupertinoSystemDisplay',
         ),
       ),
       textDirection: TextDirection.ltr,
     );
     textPainter.layout();
-    textPainter.paint(canvas, center + Offset(5, -textPainter.height / 2));
+    textPainter.paint(
+      canvas,
+      boxPos + Offset(-textPainter.width / 2, radius + 6),
+    );
 
     // Flash overlay
     if (box.explosionOpacity > 0.0) {
@@ -303,9 +316,57 @@ class GamePainter extends CustomPainter {
         ..color = Colors.white.withValues(
           alpha: box.explosionOpacity.clamp(0.0, 1.0),
         )
-        ..style = PaintingStyle.fill;
-      canvas.drawRRect(rrect, flashPaint);
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10.0);
+      canvas.drawCircle(boxPos, radius * 1.5, flashPaint);
     }
+
+    // --- DRAW SCORE UI (Right Side) ---
+    final Offset scorePos = Offset(GameConstants.logicalWidth - 65, startY);
+
+    // Sleek glass pill for score
+    final rect = Rect.fromCenter(center: scorePos, width: 90, height: 44);
+    final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(22));
+
+    final glassPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.1)
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(rrect, glassPaint);
+
+    final borderPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.25)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawRRect(rrect, borderPaint);
+
+    // Score Text
+    final scorePainter = TextPainter(
+      text: TextSpan(
+        text: 'SCORE\n',
+        style: const TextStyle(
+          color: Colors.white70,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.0,
+        ),
+        children: [
+          TextSpan(
+            text: '${controller.score}',
+            style: const TextStyle(
+              color: GameConstants.neonText,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    );
+    scorePainter.layout();
+    scorePainter.paint(
+      canvas,
+      scorePos - Offset(scorePainter.width / 2, scorePainter.height / 2),
+    );
   }
 
   void _drawTapEffects(Canvas canvas) {
