@@ -49,6 +49,29 @@ class GamePainter extends CustomPainter {
       theme: controller.currentTheme,
     );
 
+    // Draw Spawn Cave/Hole at the start of the path
+    final startPos = controller.pathPoints.first;
+    final spawnShadow = Paint()
+      ..color = Colors.black.withValues(alpha: 0.6)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10.0);
+    canvas.drawCircle(startPos, 24.0, spawnShadow);
+
+    final spawnHole = Paint()
+      ..color = const Color(0xFF0A0A0A)
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(startPos, 18.0, spawnHole);
+
+    final spawnBorder = Paint()
+      ..color = themeColor.withValues(alpha: 0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0;
+    canvas.drawCircle(startPos, 18.0, spawnBorder);
+
+    final themeColor = GameConstants.getLevelColor(
+      controller.currentLevelNumber - 1,
+      theme: controller.currentTheme,
+    );
+
     // Calculate warning path color shift (when chain is near the box)
     double warningIntensity = 0.0;
     if (controller.activeBalls.isNotEmpty) {
@@ -196,78 +219,97 @@ class GamePainter extends CustomPainter {
     final box = controller.box;
     if (box == null) return;
 
-    // Egg-carton style container box holding slots horizontally
-    double slotSpacing = 36.0 * box.bounceScale;
-    double boxWidth = ((box.requiredCount - 1) * slotSpacing + 46.0);
-    double boxHeight = 48.0 * box.bounceScale;
-    final cardRect = Rect.fromCenter(
-      center: box.position,
-      width: boxWidth,
-      height: boxHeight,
-    );
-    final cardRRect = RRect.fromRectAndRadius(
-      cardRect,
-      const Radius.circular(14.0),
-    );
+    final center = box.position;
+    final double baseRadius = 32.0 * box.bounceScale;
 
-    // 1. Draw subtle soft drop shadow behind the box card
-    final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.15)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
-    canvas.drawRRect(cardRRect.shift(const Offset(0.0, 3.0)), shadowPaint);
+    // 1. Draw glowing aura ring around the portal
+    final auraPaint = Paint()
+      ..color = box.targetColor.withValues(alpha: 0.2)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15.0);
+    canvas.drawCircle(center, baseRadius * 1.5, auraPaint);
 
-    // 2. Draw card background (frosted / matte surface)
-    final cardBgPaint = Paint()
-      ..color = const Color(0xFF1E1E2E).withValues(alpha: 0.92);
-    canvas.drawRRect(cardRRect, cardBgPaint);
+    // 2. Draw dark portal center (Void)
+    final portalPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [const Color(0xFF05050A), const Color(0xFF151525)],
+      ).createShader(Rect.fromCircle(center: center, radius: baseRadius));
+    canvas.drawCircle(center, baseRadius, portalPaint);
 
-    // Card border outline (flat target color indicator)
-    final cardBorderPaint = Paint()
+    // 3. Draw outer magical ring
+    final ringPaint = Paint()
+      ..color = box.targetColor.withValues(alpha: 0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawCircle(center, baseRadius, ringPaint);
+
+    // Rotating inner runic dashes
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(controller.totalElapsedTime * 2.0);
+    final dashPaint = Paint()
       ..color = box.targetColor.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    canvas.drawRRect(cardRRect, cardBorderPaint);
+      ..strokeWidth = 4.0;
+    for (int i = 0; i < 6; i++) {
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset.zero, radius: baseRadius - 6),
+        i * (pi / 3),
+        pi / 6,
+        false,
+        dashPaint,
+      );
+    }
+    canvas.restore();
 
-    // 3. Draw egg-box slots/cups inside the card
-    double startX =
-        box.position.dx - ((box.requiredCount - 1) * slotSpacing) / 2;
-    for (int i = 0; i < box.requiredCount; i++) {
-      Offset slotPos = Offset(startX + (i * slotSpacing), box.position.dy);
+    // 4. Draw floating crystals (slots) orbiting the portal
+    int count = box.requiredCount;
+    double orbitRadius = baseRadius + 16.0;
+    double startAngle = -pi / 2; // start from top
+    double angleStep = (2 * pi) / count;
+
+    for (int i = 0; i < count; i++) {
+      double angle = startAngle + (i * angleStep);
+      Offset crystalPos =
+          center + Offset(cos(angle) * orbitRadius, sin(angle) * orbitRadius);
+
       bool isFilled = i < box.currentCount;
 
       if (isFilled) {
-        // Draw the 3D-looking matte ball of the target color sitting inside the cup!
-        _draw3DBall(canvas, slotPos, box.targetColor, 0.74 * box.bounceScale);
+        // Glowing filled crystal
+        _draw3DBall(
+          canvas,
+          crystalPos,
+          box.targetColor,
+          0.45 * box.bounceScale,
+        );
+        final glowPaint = Paint()
+          ..color = box.targetColor.withValues(alpha: 0.8)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
+        canvas.drawCircle(crystalPos, 6.0, glowPaint);
       } else {
-        // Draw empty egg carton cup pocket (concave depth)
-        final cupBgPaint = Paint()
-          ..color = const Color(0xFF0F0F1A)
-          ..style = PaintingStyle.fill;
-        canvas.drawCircle(slotPos, 12.0 * box.bounceScale, cupBgPaint);
-
-        // Highlight ring of the cup pocket: colored to target color
-        final cupRingPaint = Paint()
-          ..color = box.targetColor.withValues(alpha: 0.35)
+        // Empty floating crystal slot (dim outline)
+        final emptyPaint = Paint()
+          ..color = box.targetColor.withValues(alpha: 0.4)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.2;
-        canvas.drawCircle(slotPos, 12.0 * box.bounceScale, cupRingPaint);
+          ..strokeWidth = 1.5;
+        canvas.drawCircle(crystalPos, 6.0 * box.bounceScale, emptyPaint);
 
-        // Small indicator dot inside the empty cup: bright solid target color
-        final cupDotPaint = Paint()
-          ..color = box.targetColor.withValues(alpha: 0.85)
+        // Small indicator dot
+        final dotPaint = Paint()
+          ..color = box.targetColor.withValues(alpha: 0.6)
           ..style = PaintingStyle.fill;
-        canvas.drawCircle(slotPos, 4.5 * box.bounceScale, cupDotPaint);
+        canvas.drawCircle(crystalPos, 2.0 * box.bounceScale, dotPaint);
       }
     }
 
-    // 4. Clean white flash overlay on complete/land
+    // 5. Clean white flash overlay on complete/land
     if (box.explosionOpacity > 0.0) {
       final flashPaint = Paint()
         ..color = Colors.white.withValues(
           alpha: box.explosionOpacity.clamp(0.0, 1.0),
         )
         ..style = PaintingStyle.fill;
-      canvas.drawRRect(cardRRect, flashPaint);
+      canvas.drawCircle(center, baseRadius * 1.5, flashPaint);
     }
   }
 

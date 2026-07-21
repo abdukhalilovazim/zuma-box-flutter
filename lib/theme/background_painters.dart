@@ -222,28 +222,90 @@ class ElephantPainter extends ParallaxBackgroundPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Spooky foggy background
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()..color = const Color(0xFF121A15),
+      Paint()..color = const Color(0xFF161A18),
     );
 
-    // Distant canopy
-    final p1 = Paint()..color = const Color(0xFF19241C);
+    // Layer 1: Distant tusks and bones
+    final p1 = Paint()..color = const Color(0xFF202A24);
     double offset1 = (animationVal * 15) % size.width;
-    _drawCanopy(canvas, size, p1, offset1, 0.2);
-    _drawCanopy(canvas, size, p1, offset1 - size.width, 0.2);
+    _drawTusks(canvas, size, p1, offset1, 0.35);
+    _drawTusks(canvas, size, p1, offset1 - size.width, 0.35);
 
-    // Midground flora
-    final p2 = Paint()..color = const Color(0xFF223026);
-    double offset2 = (animationVal * 35) % size.width;
-    _drawCanopy(canvas, size, p2, offset2, 0.4);
-    _drawCanopy(canvas, size, p2, offset2 - size.width, 0.4);
+    // Layer 2: Midground spooky rocky terrain
+    final p2 = Paint()..color = const Color(0xFF2A362D);
+    double offset2 = (animationVal * 30) % size.width;
+    _drawRockyGround(canvas, size, p2, offset2, 0.3);
+    _drawRockyGround(canvas, size, p2, offset2 - size.width, 0.3);
 
-    // Foreground base
+    // Layer 3: Foreground dark canopy (hanging moss/leaves) at the top
+    final p3 = Paint()..color = const Color(0xFF101411);
+    double offset3 = (animationVal * 45) % size.width;
+    _drawCanopy(canvas, size, p3, offset3, 0.15);
+    _drawCanopy(canvas, size, p3, offset3 - size.width, 0.15);
+
+    // Foreground base ground
+    final p4 = Paint()..color = const Color(0xFF1C241E);
     canvas.drawRect(
-      Rect.fromLTWH(0, size.height * 0.8, size.width, size.height * 0.2),
-      Paint()..color = const Color(0xFF2B3A2F),
+      Rect.fromLTWH(0, size.height * 0.85, size.width, size.height * 0.15),
+      p4,
     );
+  }
+
+  void _drawTusks(
+    Canvas canvas,
+    Size size,
+    Paint paint,
+    double offsetX,
+    double heightRatio,
+  ) {
+    final path = Path();
+    path.moveTo(offsetX, size.height);
+    double step = 120.0;
+    Random rnd = Random(42);
+    for (double x = offsetX; x <= offsetX + size.width + step; x += step) {
+      if (rnd.nextBool()) {
+        double th = size.height * heightRatio * (0.6 + rnd.nextDouble() * 0.4);
+        // Draw a curved tusk sticking out of the ground
+        path.moveTo(x, size.height);
+        path.quadraticBezierTo(
+          x - 40,
+          size.height - th / 2,
+          x + 20,
+          size.height - th,
+        );
+        path.quadraticBezierTo(
+          x - 10,
+          size.height - th / 2,
+          x + 30,
+          size.height,
+        );
+      }
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawRockyGround(
+    Canvas canvas,
+    Size size,
+    Paint paint,
+    double offsetX,
+    double heightRatio,
+  ) {
+    final path = Path();
+    path.moveTo(offsetX, size.height);
+    double step = 80.0;
+    Random rnd = Random(88);
+    for (double x = offsetX; x <= offsetX + size.width + step; x += step) {
+      double gh = size.height * heightRatio * (0.4 + rnd.nextDouble() * 0.6);
+      path.lineTo(x - step / 2, size.height - gh);
+      path.lineTo(x, size.height - gh * 0.8);
+    }
+    path.lineTo(offsetX + size.width + step, size.height);
+    path.close();
+    canvas.drawPath(path, paint);
   }
 
   void _drawCanopy(
@@ -255,17 +317,20 @@ class ElephantPainter extends ParallaxBackgroundPainter {
   ) {
     final path = Path();
     path.moveTo(offsetX, 0);
-    double step = 80.0;
-    Random rnd = Random(88);
-    for (double x = offsetX; x <= offsetX + size.width + step; x += step) {
-      double ch = size.height * heightRatio * (0.6 + rnd.nextDouble() * 0.4);
-      // Use cubic bezier for rounded leafy canopy
-      path.cubicTo(
-        x - step * 0.75, ch, 
-        x - step * 0.25, ch, 
-        x, 0
-      );
+    double step = 90.0;
+    Random rnd = Random(123);
+    for (
+      double x = offsetX + step;
+      x <= offsetX + size.width + step * 2;
+      x += step
+    ) {
+      double prevX = x - step;
+      double ch = size.height * heightRatio * (0.5 + rnd.nextDouble() * 0.5);
+      // Smooth hanging moss/leaves
+      path.cubicTo(prevX + step * 0.1, ch, x - step * 0.1, ch, x, 0);
     }
+    path.lineTo(offsetX + size.width + step * 2, -50);
+    path.lineTo(offsetX, -50);
     path.close();
     canvas.drawPath(path, paint);
   }
