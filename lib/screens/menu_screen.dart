@@ -315,9 +315,15 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                                       ? () {
                                           controller.startLevel(levelNum);
                                           Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (_) =>
-                                                  const GameScreen(),
+                                            PageRouteBuilder(
+                                              pageBuilder: (context, animation, secondaryAnimation) => const GameScreen(),
+                                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                                return FadeTransition(
+                                                  opacity: animation,
+                                                  child: child,
+                                                );
+                                              },
+                                              transitionDuration: const Duration(milliseconds: 400),
                                             ),
                                           );
                                         }
