@@ -79,7 +79,7 @@ class GamePainter extends CustomPainter {
   void _drawPathTrack(Canvas canvas) {
     if (controller.pathPoints.isEmpty) return;
 
-    final themeColor = GameConstants.getLevelColor(controller.currentLevelNumber - 1);
+    final themeColor = GameConstants.getLevelColor(controller.currentLevelNumber - 1, theme: controller.currentTheme);
 
     // Calculate warning path color shift (when chain is near the box)
     double warningIntensity = 0.0;

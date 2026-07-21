@@ -30,7 +30,15 @@ class GameConstants {
     neonOrange,
   ];
 
-  static Color getLevelColor(int index) {
-    return levelColors[index % levelColors.length];
+  static const Map<String, List<Color>> themePalettes = {
+    "tokyo": levelColors, // Original neon colors
+    "germany": [Color(0xFFE63946), Color(0xFF1D3557), Color(0xFFF1FAEE), Color(0xFFA8DADC), Color(0xFF457B9D)], // Distinct vibrant colors
+    "egypt": [Color(0xFFEEDD82), Color(0xFF008080), Color(0xFFC19A6B), Color(0xFF800000), Color(0xFFD2B48C)], // Desert, gold, teal
+    "elephant": [Color(0xFF8A9A5B), Color(0xFF556B2F), Color(0xFF708090), Color(0xFF8B4513), Color(0xFF2F4F4F)], // Jungle, grey, brown
+  };
+
+  static Color getLevelColor(int index, {String theme = "tokyo"}) {
+    final palette = themePalettes[theme] ?? levelColors;
+    return palette[index % palette.length];
   }
 }

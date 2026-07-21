@@ -261,7 +261,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                       itemBuilder: (context, index) {
                         final levelNum = index + 1;
                         final isUnlocked = unlockedLevels.contains(levelNum);
-                        final levelColor = GameConstants.getLevelColor(index % 5);
+                        final levelColor = GameConstants.getLevelColor(index % 5, theme: controller.currentTheme);
 
                         final isCompleted = completedLevels.contains(levelNum);
 

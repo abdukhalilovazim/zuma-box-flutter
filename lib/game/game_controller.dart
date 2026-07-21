@@ -126,7 +126,7 @@ class GameController extends ChangeNotifier {
 
     List<Color> colorsToShuffle = [];
     for (int i = 0; i < colorCount; i++) {
-      final color = GameConstants.getLevelColor(i);
+      final color = GameConstants.getLevelColor(i, theme: currentTheme);
       final count = groupsPerColor[i] * boxDemand;
       for (int c = 0; c < count; c++) {
         colorsToShuffle.add(color);
@@ -150,7 +150,7 @@ class GameController extends ChangeNotifier {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
 
-    final themeColor = GameConstants.getLevelColor(currentLevelNumber - 1);
+    final themeColor = GameConstants.getLevelColor(currentLevelNumber - 1, theme: currentTheme);
     Color glowColor = themeColor.withOpacity(0.12);
     Color railColor = themeColor.withOpacity(0.3);
     Color innerColor = const Color(0xFF0F0F1A);
@@ -333,8 +333,20 @@ class GameController extends ChangeNotifier {
     if (state == GameState.playing && box != null && activeBalls.isNotEmpty) {
       final remainingDemand = box!.requiredCount - box!.currentCount;
       if (!_isColorValidForBox(box!.targetColor, currentCount: box!.currentCount, remainingDemand: remainingDemand)) {
-        // Target color is no longer valid, shift target color to a valid color and reset box
-        box!.reset(_getRandomActiveColor(choosingNew: true));
+        // Before resetting, ensure there is AT LEAST ONE valid color available.
+        // Otherwise, stick with the current color to avoid infinite flickering.
+        final activeColors = activeBalls.map((b) => b.color).toSet().toList();
+        bool hasAnyValid = false;
+        for (var c in activeColors) {
+          if (_isColorValidForBox(c, currentCount: 0, remainingDemand: box!.requiredCount)) {
+            hasAnyValid = true;
+            break;
+          }
+        }
+        
+        if (hasAnyValid) {
+          box!.reset(_getRandomActiveColor(choosingNew: true));
+        }
       }
     }
 
@@ -368,7 +380,8 @@ class GameController extends ChangeNotifier {
     }
 
     // Move head ball forward along the path rapidly (slither-in train entry)
-    final double introSpeed = 220.0 * currentLevelConfig.speedMultiplier;
+    final double dynamicMultiplier = currentLevelConfig.speedMultiplier + (currentLevelNumber * 0.04);
+    final double introSpeed = 220.0 * dynamicMultiplier;
     final head = activeBalls.first;
     head.targetDistance += introSpeed * dt;
 
@@ -418,7 +431,8 @@ class GameController extends ChangeNotifier {
       }
     } else {
       // Move head ball forward along the path
-      final double normalSpeed = 35.0 * currentLevelConfig.speedMultiplier;
+      final double dynamicMultiplier = currentLevelConfig.speedMultiplier + (currentLevelNumber * 0.04);
+      final double normalSpeed = 35.0 * dynamicMultiplier;
       final head = activeBalls.first;
       head.targetDistance += normalSpeed * dt;
 
@@ -506,7 +520,7 @@ class GameController extends ChangeNotifier {
 
   Color _getRandomActiveColor({bool choosingNew = false}) {
     if (activeBalls.isEmpty) {
-      return GameConstants.getLevelColor(_random.nextInt(currentLevelConfig.colorCount));
+      return GameConstants.getLevelColor(_random.nextInt(currentLevelConfig.colorCount), theme: currentTheme);
     }
 
     final boxDemand = currentLevelConfig.boxDemand;
@@ -625,42 +639,59 @@ class GameController extends ChangeNotifier {
 
       // Verifying if color matches the Box target color
       if (box != null && tappedBall.color == box!.targetColor) {
-        // CORRECT TAP:
-        HapticFeedback.lightImpact();
-        tapEffects.add(TapEffect(
-          position: tappedBall.currentPos,
-          color: Colors.white,
-          isCorrect: true,
-        ));
+        
+        int flyingOfTargetColor = flyingBalls.where((b) => b.color == box!.targetColor).length;
+        int remainingDemand = box!.requiredCount - box!.currentCount;
 
-        // DETACH FROM CHAIN
-        activeBalls.removeAt(hitIndex);
+        if (flyingOfTargetColor < remainingDemand) {
+          // CORRECT TAP:
+          HapticFeedback.lightImpact();
+          tapEffects.add(TapEffect(
+            position: tappedBall.currentPos,
+            color: Colors.white,
+            isCorrect: true,
+          ));
 
-        // Shift backward by 1 diameter. Let's make it a snappy shift!
-        for (int i = 0; i < hitIndex; i++) {
-          activeBalls[i].targetDistance -= GameConstants.ballDiameter;
+          // DETACH FROM CHAIN
+          activeBalls.removeAt(hitIndex);
+
+          // Shift backward by 1 diameter. Let's make it a snappy shift!
+          for (int i = 0; i < hitIndex; i++) {
+            activeBalls[i].targetDistance -= GameConstants.ballDiameter;
+          }
+
+          // CREATE FLYING BALL
+          // Curve path: midpoint + perpendicular displacement
+          final startPos = tappedBall.currentPos;
+          double slotSpacing = 36.0;
+          double startX = box!.position.dx - ((box!.requiredCount - 1) * slotSpacing) / 2;
+          // Calculate destination slot based on already filled + currently flying
+          int targetSlotIndex = box!.currentCount + flyingOfTargetColor;
+          final endPos = Offset(startX + (targetSlotIndex * slotSpacing), box!.position.dy);
+          final mid = (startPos + endPos) / 2;
+          final dir = endPos - startPos;
+          // Generate a random curve height offset to the left or right
+          final perpSign = _random.nextBool() ? 1 : -1;
+          final perp = Offset(-dir.dy, dir.dx).normalize() * (70.0 * perpSign);
+          final control = mid + perp;
+
+          flyingBalls.add(FlyingBall(
+            id: tappedBall.id,
+            color: tappedBall.color,
+            startPosition: startPos,
+            endPosition: endPos,
+            controlPoint: control,
+          ));
+        } else {
+          // WRONG TAP (Box already has enough balls flying towards it)
+          HapticFeedback.vibrate();
+          tappedBall.shakeTimer = 0.25;
+          tapEffects.add(TapEffect(
+            position: tappedBall.currentPos,
+            color: GameConstants.neonRed,
+            isCorrect: false,
+          ));
         }
-
-        // CREATE FLYING BALL
-        // Curve path: midpoint + perpendicular displacement
-        final startPos = tappedBall.currentPos;
-        double slotSpacing = 36.0;
-        double startX = box!.position.dx - ((box!.requiredCount - 1) * slotSpacing) / 2;
-        final endPos = Offset(startX + (box!.currentCount * slotSpacing), box!.position.dy);
-        final mid = (startPos + endPos) / 2;
-        final dir = endPos - startPos;
-        // Generate a random curve height offset to the left or right
-        final perpSign = _random.nextBool() ? 1 : -1;
-        final perp = Offset(-dir.dy, dir.dx).normalize() * (70.0 * perpSign);
-        final control = mid + perp;
-
-        flyingBalls.add(FlyingBall(
-          id: tappedBall.id,
-          color: tappedBall.color,
-          startPosition: startPos,
-          endPosition: endPos,
-          controlPoint: control,
-        ));
       } else {
         // WRONG TAP:
         HapticFeedback.vibrate();
@@ -720,7 +751,7 @@ class GameController extends ChangeNotifier {
       final speed = 120.0 + _random.nextDouble() * 200.0;
       final sparkColor = _random.nextBool()
           ? color
-          : GameConstants.getLevelColor(_random.nextInt(5));
+          : GameConstants.getLevelColor(_random.nextInt(5), theme: currentTheme);
       particles.add(GameParticle(
         position: origin,
         velocity: Offset(cos(angle) * speed, sin(angle) * speed),
@@ -754,7 +785,7 @@ class GameController extends ChangeNotifier {
       final startY = -_random.nextDouble() * 100.0; // Spawn offscreen top
       final speedY = 100.0 + _random.nextDouble() * 150.0;
       final speedX = -40.0 + _random.nextDouble() * 80.0;
-      final confColor = GameConstants.getLevelColor(_random.nextInt(5));
+      final confColor = GameConstants.getLevelColor(_random.nextInt(5), theme: currentTheme);
       particles.add(GameParticle(
         position: Offset(startX, startY),
         velocity: Offset(speedX, speedY),
