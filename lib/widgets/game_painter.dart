@@ -122,6 +122,38 @@ class GamePainter extends CustomPainter {
             cos(ball.shakeTimer * 100.0) * disp,
           );
         }
+
+        // Add Warning Glow for balls near the box
+        double distToBox = controller.totalPathLength - ball.distance;
+        if (distToBox < 160.0 && distToBox > 0.0) {
+          double warningIntensity = (1.0 - (distToBox / 160.0)).clamp(0.0, 1.0);
+          double pulse = 0.5 + 0.5 * sin(controller.totalElapsedTime * 10.0);
+          double glowAlpha = warningIntensity * pulse * 0.8;
+
+          if (glowAlpha > 0.0) {
+            // Soft red glow behind the ball
+            final glowPaint = Paint()
+              ..color = GameConstants.neonRed.withValues(alpha: glowAlpha)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
+            canvas.drawCircle(
+              pos,
+              GameConstants.ballRadius * ball.visualScale * 1.6,
+              glowPaint,
+            );
+
+            // Sharp red ring around the ball
+            final ringPaint = Paint()
+              ..color = GameConstants.neonRed.withValues(alpha: glowAlpha)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2.5;
+            canvas.drawCircle(
+              pos,
+              GameConstants.ballRadius * ball.visualScale * 1.15,
+              ringPaint,
+            );
+          }
+        }
+
         _draw3DBall(canvas, pos, ball.color, ball.visualScale);
       }
     }

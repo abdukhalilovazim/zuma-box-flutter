@@ -15,8 +15,9 @@ class PathManager {
     int pointsPerSegment = 30,
   }) {
     if (waypoints.isEmpty) return [];
-    if (waypoints.length < 2)
+    if (waypoints.length < 2) {
       return waypoints.map((w) => w.toOffset()).toList();
+    }
 
     List<Offset> controlPoints = waypoints.map((w) => w.toOffset()).toList();
     List<Offset> path = [];

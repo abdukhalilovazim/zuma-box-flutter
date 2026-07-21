@@ -6,10 +6,12 @@ import 'package:zumabox/game/game_controller.dart';
 import 'package:zumabox/utils/storage_service.dart';
 
 void main() {
-  testWidgets('ZumaBox main menu loads successfully', (WidgetTester tester) async {
+  testWidgets('ZumaBox main menu loads successfully', (
+    WidgetTester tester,
+  ) async {
     // Initialize SharedPreferences mock
     SharedPreferences.setMockInitialValues({});
-    
+
     final storage = await StorageService.init();
     final controller = GameController(storageService: storage);
 

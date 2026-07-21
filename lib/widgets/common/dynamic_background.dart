@@ -5,8 +5,9 @@ import '../../theme/background_painters.dart';
 
 class DynamicBackground extends StatefulWidget {
   final Widget child;
+  final String? themeOverride;
 
-  const DynamicBackground({super.key, required this.child});
+  const DynamicBackground({super.key, required this.child, this.themeOverride});
 
   @override
   State<DynamicBackground> createState() => _DynamicBackgroundState();
@@ -48,7 +49,9 @@ class _DynamicBackgroundState extends State<DynamicBackground>
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.select<GameController, String>((c) => c.currentTheme);
+    final theme =
+        widget.themeOverride ??
+        context.select<GameController, String>((c) => c.currentTheme);
 
     return Stack(
       children: [
