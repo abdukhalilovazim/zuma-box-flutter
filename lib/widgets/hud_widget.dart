@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../game/game_controller.dart';
 import '../utils/constants.dart';
+import 'common/glass_card.dart';
+import 'common/glass_button.dart';
 
 class HudWidget extends StatelessWidget {
   const HudWidget({Key? key}) : super(key: key);
@@ -111,25 +113,41 @@ class HudWidget extends StatelessWidget {
             title: controller.translate('paused'),
             titleColor: GameConstants.neonText,
             content: [
-              _buildNeonButton(
-                text: controller.translate('resume'),
-                onPressed: () => controller.resumeGame(),
-                color: GameConstants.neonText,
+              GlassButton(
+                onTap: () => controller.resumeGame(),
+                color: Colors.white.withValues(alpha: 0.1),
+                child: Center(
+                  child: Text(
+                    controller.translate('resume'),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
               const SizedBox(height: 15.0),
-              _buildNeonButton(
-                text: controller.translate('restart'),
-                onPressed: () => controller.restartLevel(),
-                color: GameConstants.neonYellow,
+              GlassButton(
+                onTap: () => controller.restartLevel(),
+                color: Colors.white.withValues(alpha: 0.1),
+                child: Center(
+                  child: Text(
+                    controller.translate('restart'),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
               const SizedBox(height: 15.0),
-              _buildNeonButton(
-                text: controller.translate('main_menu'),
-                onPressed: () {
+              GlassButton(
+                onTap: () {
                   controller.pauseGame();
                   Navigator.of(context).pop();
                 },
-                color: Colors.white60,
+                color: Colors.transparent,
+                borderColor: Colors.white12,
+                child: Center(
+                  child: Text(
+                    controller.translate('main_menu'),
+                    style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
             ],
           ),
@@ -160,20 +178,29 @@ class HudWidget extends StatelessWidget {
                 titleColor: GameConstants.neonRed,
                 score: controller.score,
                 content: [
-                  PulsingButton(
-                    onPressed: () => controller.restartLevel(),
-                    child: _buildNeonButtonRaw(
-                      text: controller.translate('try_again'),
-                      color: GameConstants.neonRed,
+                  GlassButton(
+                    onTap: () => controller.restartLevel(),
+                    color: Colors.red.withValues(alpha: 0.2),
+                    child: Center(
+                      child: Text(
+                        controller.translate('try_again'),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 15.0),
-                  _buildNeonButton(
-                    text: controller.translate('main_menu'),
-                    onPressed: () {
+                  GlassButton(
+                    onTap: () {
                       Navigator.of(context).pop();
                     },
-                    color: Colors.white60,
+                    color: Colors.transparent,
+                    borderColor: Colors.white12,
+                    child: Center(
+                      child: Text(
+                        controller.translate('main_menu'),
+                        style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -192,11 +219,14 @@ class HudWidget extends StatelessWidget {
               AnimatedStars(count: starsCount),
               const SizedBox(height: 24.0),
               if (controller.currentLevelNumber < 30)
-                PulsingButton(
-                  onPressed: () => controller.startLevel(controller.currentLevelNumber + 1),
-                  child: _buildNeonButtonRaw(
-                    text: controller.translate('next_level'),
-                    color: GameConstants.neonGreen,
+                GlassButton(
+                  onTap: () => controller.startLevel(controller.currentLevelNumber + 1),
+                  color: Colors.white.withValues(alpha: 0.2),
+                  child: Center(
+                    child: Text(
+                      controller.translate('next_level'),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 )
               else
@@ -216,12 +246,18 @@ class HudWidget extends StatelessWidget {
                   ],
                 ),
               const SizedBox(height: 15.0),
-              _buildNeonButton(
-                text: controller.translate('main_menu'),
-                onPressed: () {
+              GlassButton(
+                onTap: () {
                   Navigator.of(context).pop();
                 },
-                color: Colors.white60,
+                color: Colors.transparent,
+                borderColor: Colors.white12,
+                child: Center(
+                  child: Text(
+                    controller.translate('main_menu'),
+                    style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
             ],
           ),
@@ -241,24 +277,13 @@ class HudWidget extends StatelessWidget {
     return Container(
       color: Colors.black.withOpacity(0.65), // Soft dark vignette backdrop
       child: Center(
-        child: Container(
+        child: GlassCard(
           width: 310,
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 30.0),
-          decoration: BoxDecoration(
-            color: GameConstants.cardBg,
-            borderRadius: BorderRadius.circular(24.0),
-            border: Border.all(
-              color: const Color(0xFF2E2E42),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.35),
-                blurRadius: 20.0,
-                offset: const Offset(0.0, 8.0),
-              )
-            ],
-          ),
+          borderRadius: 24.0,
+          color: const Color(0xFF1E1E2E).withValues(alpha: 0.6),
+          borderColor: Colors.white.withValues(alpha: 0.1),
+          borderWidth: 1.0,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -323,50 +348,6 @@ class HudWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildNeonButtonRaw({
-    required String text,
-    required Color color,
-  }) {
-    bool isPrimary = color != Colors.white60;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 14.0),
-      decoration: BoxDecoration(
-        color: isPrimary ? color : const Color(0xFF2C2C3E).withOpacity(0.5),
-        borderRadius: BorderRadius.circular(14.0),
-        border: isPrimary ? null : Border.all(color: Colors.white12, width: 1.0),
-        boxShadow: isPrimary ? [
-          BoxShadow(
-            color: color.withOpacity(0.24),
-            blurRadius: 8.0,
-            offset: const Offset(0.0, 3.0),
-          )
-        ] : null,
-      ),
-      child: Center(
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isPrimary ? Colors.white : Colors.white70,
-            fontSize: 15.0,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.0,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNeonButton({
-    required String text,
-    required VoidCallback onPressed,
-    required Color color,
-  }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: _buildNeonButtonRaw(text: text, color: color),
-    );
-  }
 }
 
 // ---------------------------------------------

@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 import '../game/game_controller.dart';
 import '../utils/constants.dart';
 import 'game_screen.dart';
+import '../widgets/common/dynamic_background.dart';
+import '../widgets/common/glass_card.dart';
+import '../widgets/common/glass_button.dart';
 
 enum MenuState { home, levels, settings }
 
@@ -48,18 +51,9 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
     final completedLevels = controller.storageService.getCompletedLevels();
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // 1. Animated Cosmic Background
-          AnimatedBuilder(
-            animation: _bgController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: MenuBackgroundPainter(animationVal: _bgController.value),
-                child: Container(),
-              );
-            },
-          ),
+      body: DynamicBackground(
+        child: Stack(
+          children: [
 
           // Top Right Controls (Settings or Back)
           Positioned(
@@ -77,15 +71,11 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                           _menuState = MenuState.home;
                         });
                       },
-                      child: Container(
-                        padding: const EdgeInsets.all(10.0),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.06),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      child:                        GlassCard(
+                          borderRadius: 30.0,
+                          padding: const EdgeInsets.all(10.0),
+                          child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70, size: 20),
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white70, size: 20),
-                      ),
                     )
                   else
                     const SizedBox(),
@@ -97,13 +87,9 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                           _menuState = MenuState.settings;
                         });
                       },
-                      child: Container(
+                      child: GlassCard(
+                        borderRadius: 30.0,
                         padding: const EdgeInsets.all(10.0),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.06),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white.withOpacity(0.1)),
-                        ),
                         child: const Icon(Icons.settings_rounded, color: Colors.white70, size: 24),
                       ),
                     ),
@@ -117,66 +103,39 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
             child: Column(
               children: [
 
-
                 if (_menuState == MenuState.home) ...[
                   const Spacer(flex: 2),
 
-                  // Pulsing Logo
-                  AnimatedBuilder(
-                    animation: _glowController,
-                    builder: (context, child) {
-                      return Column(
-                        children: [
-                          Text(
-                            "ZUMA",
-                            style: TextStyle(
-                              fontSize: 66.0,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 8.0,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  offset: const Offset(0.0, 4.0),
-                                  blurRadius: 8.0,
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            "BOX",
-                            style: TextStyle(
-                              fontSize: 38.0,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 6.0,
-                              color: GameConstants.neonText,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  offset: const Offset(0.0, 4.0),
-                                  blurRadius: 8.0,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
+                  // Flat Minimal Logo
+                  Column(
+                    children: [
+                      Text(
+                        "ZUMA",
+                        style: TextStyle(
+                          fontSize: 66.0,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 8.0,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        "BOX",
+                        style: TextStyle(
+                          fontSize: 38.0,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 6.0,
+                          color: GameConstants.neonText.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: 24.0),
 
                   // Best Score Banner
-                  Container(
+                  GlassCard(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.04),
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(
-                        color: GameConstants.neonText.withOpacity(0.15),
-                        width: 1.0,
-                      ),
-                    ),
+                    borderRadius: 20.0,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -198,13 +157,23 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
 
                   const Spacer(flex: 2),
 
-                  // Pulsing Play Button
-                  MenuPlayButton(
+                  // Start Game Button
+                  GlassButton(
                     onTap: () {
                       setState(() {
                         _menuState = MenuState.levels;
                       });
                     },
+                    padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 48.0),
+                    child: Text(
+                      controller.translate("start_game"),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2.0,
+                      ),
+                    ),
                   ),
 
                   const Spacer(flex: 3),
@@ -246,16 +215,9 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                     ),
                   ),
                   const SizedBox(height: 12.0),
-                  Container(
+                  GlassCard(
                     padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.06),
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.1),
-                        width: 1.0,
-                      ),
-                    ),
+                    borderRadius: 20.0,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: ["UZ", "RU", "EN"].map((lang) {
@@ -267,13 +229,13 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
                             decoration: BoxDecoration(
-                              color: isSelected ? GameConstants.neonText : Colors.transparent,
+                              color: isSelected ? Colors.white.withValues(alpha: 0.2) : Colors.transparent,
                               borderRadius: BorderRadius.circular(14.0),
                             ),
                             child: Text(
                               lang,
                               style: TextStyle(
-                                color: isSelected ? const Color(0xFF12121F) : Colors.white70,
+                                color: isSelected ? Colors.white : Colors.white70,
                                 fontSize: 16.0,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -343,30 +305,15 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
                               child: Stack(
                                 clipBehavior: Clip.none,
                                 children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: isUnlocked ? GameConstants.cardBg : Colors.black38,
-                                      borderRadius: BorderRadius.circular(15.0),
-                                      border: Border.all(
-                                        color: isCompleted
-                                            ? GameConstants.neonGreen.withOpacity(0.85)
+                                  GlassCard(
+                                    borderRadius: 15.0,
+                                    borderColor: isCompleted
+                                            ? GameConstants.neonGreen.withValues(alpha: 0.85)
                                             : (isUnlocked
                                                 ? const Color(0xFF2C2C3E)
                                                 : Colors.white10),
-                                        width: isCompleted ? 2.0 : 1.5,
-                                      ),
-                                      boxShadow: isUnlocked
-                                          ? [
-                                              BoxShadow(
-                                                color: isCompleted
-                                                    ? GameConstants.neonGreen.withOpacity(0.2)
-                                                    : Colors.black.withOpacity(0.15),
-                                                blurRadius: 6.0,
-                                                offset: const Offset(0.0, 2.0),
-                                              )
-                                            ]
-                                          : [],
-                                    ),
+                                    borderWidth: isCompleted ? 2.0 : 1.5,
+                                    color: isUnlocked ? GameConstants.cardBg.withValues(alpha: 0.4) : Colors.black38,
                                     child: Center(
                                       child: isUnlocked
                                           ? Text(
@@ -420,6 +367,7 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -432,172 +380,41 @@ class _MenuScreenState extends State<MenuScreen> with TickerProviderStateMixin {
       onTap: () {
         controller.setTheme(themeKey);
       },
-      child: Container(
+      child: GlassCard(
         width: 140.0,
         margin: const EdgeInsets.symmetric(horizontal: 8.0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16.0),
-          border: Border.all(
-            color: isSelected ? GameConstants.neonText : Colors.transparent,
-            width: 2.0,
-          ),
-          image: DecorationImage(
-            image: AssetImage("assets/images/themes/$fileName"),
-            fit: BoxFit.cover,
-            colorFilter: isSelected ? null : ColorFilter.mode(Colors.black.withOpacity(0.5), BlendMode.darken),
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: GameConstants.neonText.withOpacity(0.4),
-                    blurRadius: 8.0,
-                    offset: const Offset(0, 2),
-                  )
-                ]
-              : [],
-        ),
-        alignment: Alignment.bottomCenter,
-        padding: const EdgeInsets.only(bottom: 8.0),
-        child: Text(
-          themeName,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.white70,
-            fontSize: 10.0,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.0,
-            shadows: const [
-              Shadow(color: Colors.black, blurRadius: 4.0),
-            ],
-          ),
+        borderRadius: 16.0,
+        borderColor: isSelected ? Colors.white : Colors.white12,
+        borderWidth: isSelected ? 2.0 : 1.0,
+        padding: const EdgeInsets.all(0),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              "assets/images/themes/$fileName",
+              fit: BoxFit.cover,
+              colorBlendMode: isSelected ? null : BlendMode.darken,
+              color: isSelected ? null : Colors.black.withValues(alpha: 0.5),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Text(
+                  themeName,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.white70,
+                    fontSize: 10.0,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ---------------------------------------------
-// Interactive Menu Play Button Widget
-// ---------------------------------------------
-
-class MenuPlayButton extends StatefulWidget {
-  final VoidCallback onTap;
-  const MenuPlayButton({Key? key, required this.onTap}) : super(key: key);
-
-  @override
-  _MenuPlayButtonState createState() => _MenuPlayButtonState();
-}
-
-class _MenuPlayButtonState extends State<MenuPlayButton> with SingleTickerProviderStateMixin {
-  late AnimationController _btnController;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _btnController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _scaleAnimation = Tween<double>(begin: 0.97, end: 1.03).animate(
-      CurvedAnimation(parent: _btnController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _btnController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _btnController,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: GestureDetector(
-            onTap: widget.onTap,
-            child: Container(
-              width: 240,
-              padding: const EdgeInsets.symmetric(vertical: 18.0),
-              decoration: BoxDecoration(
-                color: GameConstants.neonText,
-                borderRadius: BorderRadius.circular(30.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: GameConstants.neonText.withOpacity(0.28),
-                    blurRadius: 16.0,
-                    offset: const Offset(0.0, 4.0),
-                  )
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  Provider.of<GameController>(context).translate("start_game"),
-                  style: const TextStyle(
-                    color: Color(0xFF12121F),
-                    fontSize: 18.0,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2.0,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ---------------------------------------------
-// Animated Background Painter
-// ---------------------------------------------
-
-class MenuBackgroundPainter extends CustomPainter {
-  final double animationVal;
-
-  MenuBackgroundPainter({required this.animationVal});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (size.width == 0 || size.height == 0) return;
-
-    // Warm deep charcoal dark background
-    final bgPaint = Paint()..color = GameConstants.obsidianBg;
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
-
-    // Drifting subtle geometric polygon shapes
-    final polygonPaint = Paint()
-      ..color = const Color(0xFF1E1E2E).withOpacity(0.12)
-      ..style = PaintingStyle.fill;
-
-    for (int i = 0; i < 4; i++) {
-      double t = animationVal + (i * 0.25);
-      double centerX = size.width * (0.2 + 0.6 * sin(t * pi * 2 + i));
-      double centerY = size.height * (0.1 + 0.8 * (t % 1.0));
-      double radius = 60.0 + i * 25.0;
-
-      final path = Path();
-      int sides = 3 + (i % 2); // Drift triangles and diamonds/squares
-      for (int s = 0; s < sides; s++) {
-        double angle = (s * 2 * pi / sides) + t * pi * 0.5;
-        double x = centerX + cos(angle) * radius;
-        double y = centerY + sin(angle) * radius;
-        if (s == 0) {
-          path.moveTo(x, y);
-        } else {
-          path.lineTo(x, y);
-        }
-      }
-      path.close();
-      canvas.drawPath(path, polygonPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant MenuBackgroundPainter oldDelegate) =>
-      oldDelegate.animationVal != animationVal;
-}

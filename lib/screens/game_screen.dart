@@ -5,6 +5,7 @@ import '../game/game_controller.dart';
 import '../utils/constants.dart';
 import '../widgets/game_painter.dart';
 import '../widgets/hud_widget.dart';
+import '../widgets/common/dynamic_background.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({Key? key}) : super(key: key);
@@ -53,15 +54,10 @@ class _GameScreenState extends State<GameScreen> {
 
           return Stack(
             children: [
-              // Theme Background Image
+              // Theme Background Image via DynamicBackground
               Positioned.fill(
-                child: Consumer<GameController>(
-                  builder: (context, c, child) {
-                    return Image.asset(
-                      "assets/images/themes/${c.currentTheme}.png",
-                      fit: BoxFit.cover,
-                    );
-                  },
+                child: const DynamicBackground(
+                  child: SizedBox.expand(),
                 ),
               ),
               // Interactive Canvas area (centered)

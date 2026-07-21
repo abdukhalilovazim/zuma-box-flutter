@@ -18,9 +18,9 @@ class GamePainter extends CustomPainter {
     canvas.save();
     canvas.scale(scale);
 
-    // 1. (Removed Cosmic Background to show the Theme Image underneath)
+    // 1. Theme Background is handled by DynamicBackground in the GameScreen
 
-    // 2. Draw Spline Path (Neon Dotted Guide Track)
+    // 2. Draw Spline Path (Flat Muted Guide Track)
     _drawPathTrack(canvas);
 
 
@@ -43,38 +43,7 @@ class GamePainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _drawCosmicBackground(Canvas canvas, Size size) {
-    // Warm deep charcoal dark background
-    final bgPaint = Paint()..color = GameConstants.obsidianBg;
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
-    // Drifting subtle geometric polygon shapes
-    final polygonPaint = Paint()
-      ..color = const Color(0xFF1E1E2E).withOpacity(0.12)
-      ..style = PaintingStyle.fill;
-
-    for (int i = 0; i < 3; i++) {
-      double t = controller.totalElapsedTime * 0.03 + (i * 15.0);
-      double centerX = size.width * (0.3 + 0.4 * sin(t * 0.8));
-      double centerY = size.height * (0.2 + 0.6 * (t % 1.0));
-      double radius = 70.0 + i * 35.0;
-
-      final path = Path();
-      int sides = 3 + (i % 2); // Drift triangles and diamonds/squares
-      for (int s = 0; s < sides; s++) {
-        double angle = (s * 2 * pi / sides) + t * 0.15;
-        double x = centerX + cos(angle) * radius;
-        double y = centerY + sin(angle) * radius;
-        if (s == 0) {
-          path.moveTo(x, y);
-        } else {
-          path.lineTo(x, y);
-        }
-      }
-      path.close();
-      canvas.drawPath(path, polygonPaint);
-    }
-  }
 
   void _drawPathTrack(Canvas canvas) {
     if (controller.pathPoints.isEmpty) return;
@@ -99,9 +68,9 @@ class GamePainter extends CustomPainter {
 
     if (warningAlpha > 0.0 && controller.trackPath != null) {
       final warningPaint = Paint()
-        ..color = Color.lerp(Colors.transparent, GameConstants.neonRed.withOpacity(0.65), warningAlpha)!
+        ..color = Color.lerp(Colors.transparent, const Color(0x33FF0000), warningAlpha)!
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 40.0
+        ..strokeWidth = 30.0
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round;
       canvas.drawPath(controller.trackPath!, warningPaint);
@@ -124,14 +93,8 @@ class GamePainter extends CustomPainter {
     for (double d = offset; d < controller.totalPathLength; d += dotSpacing) {
       final posAngle = PathManager.getPositionAtDistance(d, controller.pathPoints, controller.pathDistances);
       
-      // Draw a glowing outer circle for each dot
-      final dotGlow = Paint()
-        ..color = centerLineColor.withOpacity(0.35)
-        ..style = PaintingStyle.fill
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
-      canvas.drawCircle(posAngle.position, 4.0, dotGlow);
-
       // Draw solid inner core
+      canvas.drawCircle(posAngle.position, 2.5, dotPaint);
       canvas.drawCircle(posAngle.position, 1.8, dotPaint);
     }
   }
@@ -198,7 +161,7 @@ class GamePainter extends CustomPainter {
 
     // 1. Draw subtle soft drop shadow behind the box card
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.25)
+      ..color = Colors.black.withValues(alpha: 0.15)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5.0);
     canvas.drawRRect(cardRRect.shift(const Offset(0.0, 3.0)), shadowPaint);
 
@@ -206,11 +169,11 @@ class GamePainter extends CustomPainter {
     final cardBgPaint = Paint()..color = const Color(0xFF1E1E2E).withOpacity(0.92);
     canvas.drawRRect(cardRRect, cardBgPaint);
 
-    // Card border outline (thick and highly visible target color indicator)
+    // Card border outline (flat target color indicator)
     final cardBorderPaint = Paint()
-      ..color = box.targetColor.withOpacity(0.85)
+      ..color = box.targetColor.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5;
+      ..strokeWidth = 1.5;
     canvas.drawRRect(cardRRect, cardBorderPaint);
 
     // 3. Draw egg-box slots/cups inside the card
@@ -302,21 +265,20 @@ class GamePainter extends CustomPainter {
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
     canvas.drawCircle(position + const Offset(0.0, 2.5), radius, shadowPaint);
 
-    // 2. Linear gradient for subtle 3D depth (matte surface, no glossy specs)
+    // 2. Radial gradient for subtle flat 3D depth
     final hsl = HSLColor.fromColor(color);
-    final lightColor = hsl.withLightness((hsl.lightness + 0.1).clamp(0.0, 1.0)).toColor();
-    final darkColor = hsl.withLightness((hsl.lightness - 0.15).clamp(0.0, 1.0)).toColor();
+    final lightColor = hsl.withLightness((hsl.lightness + 0.05).clamp(0.0, 1.0)).toColor();
+    final darkColor = hsl.withLightness((hsl.lightness - 0.1).clamp(0.0, 1.0)).toColor();
 
     final paint = Paint()
-      ..shader = LinearGradient(
+      ..shader = RadialGradient(
         colors: [
-          lightColor.withOpacity(opacity),
-          color.withOpacity(opacity),
-          darkColor.withOpacity(opacity),
+          lightColor.withValues(alpha: opacity),
+          color.withValues(alpha: opacity),
+          darkColor.withValues(alpha: opacity),
         ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        stops: const [0.0, 0.6, 1.0],
+        center: const Alignment(-0.3, -0.3),
+        radius: 0.8,
       ).createShader(Rect.fromCircle(center: position, radius: radius));
 
     canvas.drawCircle(position, radius, paint);
