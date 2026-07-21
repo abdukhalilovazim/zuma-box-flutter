@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../game/game_controller.dart';
 import '../game/path_manager.dart';
+import '../models/ball.dart';
 import '../utils/constants.dart';
 
 class GamePainter extends CustomPainter {
