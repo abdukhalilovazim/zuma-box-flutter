@@ -124,32 +124,32 @@ class HudWidget extends StatelessWidget {
         if (controller.isTutorialActive)
           Positioned.fill(
             child: Stack(
-                children: [
-                  Positioned(
-                    bottom: 50.0,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: GlassButton(
-                        onTap: () => controller.completeTutorial(),
-                        color: GameConstants.neonBlue.withValues(alpha: 0.8),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 40.0),
-                          child: Text(
-                            "GOT IT!",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+              children: [
+                Positioned(
+                  bottom: 50.0,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: GlassButton(
+                      onTap: () => controller.completeTutorial(),
+                      color: GameConstants.neonBlue.withValues(alpha: 0.8),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 40.0),
+                        child: Text(
+                          "GOT IT!",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
 
         // 2. Pause Screen Overlay
         if (controller.state == GameState.paused)

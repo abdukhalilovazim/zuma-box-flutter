@@ -38,6 +38,9 @@ class GamePainter extends CustomPainter {
     // 8. Draw Particle Effects (Sparks & Confetti)
     _drawParticles(canvas);
 
+    // 9. Draw Tutorial Overlay
+    _drawTutorial(canvas);
+
     canvas.restore();
   }
 
@@ -457,6 +460,91 @@ class GamePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5;
     canvas.drawCircle(position, radius, borderPaint);
+  }
+
+  void _drawTutorial(Canvas canvas) {
+    if (!controller.isTutorialActive || controller.box == null) return;
+
+    // 1. Draw Dark Overlay
+    final overlayPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.65)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(
+      const Rect.fromLTWH(
+        0,
+        0,
+        GameConstants.logicalWidth,
+        GameConstants.logicalHeight,
+      ),
+      overlayPaint,
+    );
+
+    // 2. Find target ball on path
+    final targetColor = controller.box!.targetColor;
+    Ball? targetBall;
+    for (var b in controller.activeBalls) {
+      if (b.color == targetColor && b.distance > 0) {
+        targetBall = b;
+        break; // point to the first valid ball
+      }
+    }
+
+    if (targetBall == null) return;
+
+    final Offset ballPos = targetBall.currentPos;
+
+    // 3. Highlight the ball (draw it again above overlay)
+    _draw3DBall(canvas, ballPos, targetBall.color, targetBall.visualScale);
+
+    // 4. Draw Pointing Icon (using TextPainter with Icons.touch_app)
+    final Offset iconPos =
+        ballPos + const Offset(-15, 30); // Below and slightly left
+    final iconPainter = TextPainter(
+      text: TextSpan(
+        text: String.fromCharCode(Icons.touch_app.codePoint),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 40.0,
+          fontFamily: Icons.touch_app.fontFamily,
+          package: Icons.touch_app.fontPackage,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    iconPainter.layout();
+    iconPainter.paint(canvas, iconPos);
+
+    // 5. Draw Info Text
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: "Aynan mana shu rangdagi\nsharni ustiga bosing!",
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16.0,
+          fontWeight: FontWeight.bold,
+          height: 1.3,
+          shadows: [
+            Shadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 4.0,
+              offset: const Offset(1, 1),
+            ),
+          ],
+        ),
+      ),
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+
+    // Position text below the icon
+    final textPos =
+        iconPos +
+        Offset(
+          (iconPainter.width - textPainter.width) / 2,
+          iconPainter.height + 10,
+        );
+    textPainter.paint(canvas, textPos);
   }
 
   @override
