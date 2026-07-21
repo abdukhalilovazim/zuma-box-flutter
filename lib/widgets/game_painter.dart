@@ -93,52 +93,26 @@ class GamePainter extends CustomPainter {
     double pulse = 0.6 + 0.4 * sin(controller.totalElapsedTime * 7.0);
     double warningAlpha = warningIntensity * pulse;
 
-    Color glowColor = themeColor.withOpacity(0.12);
-    Color railColor = themeColor.withOpacity(0.3);
-    Color innerColor = const Color(0xFF0F0F1A);
-    Color centerLineColor = themeColor.withOpacity(0.45);
+    if (controller.cachedTrackPicture != null) {
+      canvas.drawPicture(controller.cachedTrackPicture!);
+    }
 
+    if (warningAlpha > 0.0 && controller.trackPath != null) {
+      final warningPaint = Paint()
+        ..color = Color.lerp(Colors.transparent, GameConstants.neonRed.withOpacity(0.65), warningAlpha)!
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 40.0
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
+      canvas.drawPath(controller.trackPath!, warningPaint);
+    }
+
+    // 4. Draw Animated Flowing Energy Dots along the center of the track
+    Color centerLineColor = themeColor.withOpacity(0.45);
     if (warningAlpha > 0.0) {
-      glowColor = Color.lerp(glowColor, GameConstants.neonRed.withOpacity(0.3), warningAlpha)!;
-      railColor = Color.lerp(railColor, GameConstants.neonRed.withOpacity(0.65), warningAlpha)!;
       centerLineColor = Color.lerp(centerLineColor, GameConstants.neonRed.withOpacity(0.85), warningAlpha)!;
     }
 
-    final path = Path();
-    path.moveTo(controller.pathPoints.first.dx, controller.pathPoints.first.dy);
-    for (int i = 1; i < controller.pathPoints.length; i++) {
-      path.lineTo(controller.pathPoints[i].dx, controller.pathPoints[i].dy);
-    }
-
-    // 1. Draw Under-glow (thick blur shadow)
-    final glowPaint = Paint()
-      ..color = glowColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 46.0
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
-    canvas.drawPath(path, glowPaint);
-
-    // 2. Draw Outer Rails (thick boundary)
-    final railPaint = Paint()
-      ..color = railColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 40.0
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    canvas.drawPath(path, railPaint);
-
-    // 3. Draw Inner Grooved Channel (cuts into rails, showing dark center)
-    final innerPaint = Paint()
-      ..color = innerColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 34.0
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    canvas.drawPath(path, innerPaint);
-
-    // 4. Draw Animated Flowing Energy Dots along the center of the track
     final dotPaint = Paint()
       ..color = centerLineColor
       ..style = PaintingStyle.fill;

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'dart:ui' as ui;
 import '../models/ball.dart';
 import '../models/box.dart';
 import '../models/level.dart';
@@ -68,6 +69,8 @@ class GameController extends ChangeNotifier {
   List<Offset> pathPoints = [];
   List<double> pathDistances = [];
   double totalPathLength = 0.0;
+  Path? trackPath;
+  ui.Picture? cachedTrackPicture;
 
   // Game entities
   List<Ball> activeBalls = [];
@@ -91,6 +94,9 @@ class GameController extends ChangeNotifier {
   // Ticker for game loop
   Ticker? _ticker;
   Duration _lastElapsed = Duration.zero;
+
+  // Notifier specifically for the canvas repaints
+  final ValueNotifier<double> tickNotifier = ValueNotifier(0.0);
 
 
 
@@ -131,6 +137,52 @@ class GameController extends ChangeNotifier {
     levelColorPool.addAll(colorsToShuffle);
   }
 
+  void _generateTrackPathAndPicture() {
+    if (pathPoints.isEmpty) return;
+
+    final path = Path();
+    path.moveTo(pathPoints.first.dx, pathPoints.first.dy);
+    for (int i = 1; i < pathPoints.length; i++) {
+      path.lineTo(pathPoints[i].dx, pathPoints[i].dy);
+    }
+    trackPath = path;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    final themeColor = GameConstants.getLevelColor(currentLevelNumber - 1);
+    Color glowColor = themeColor.withOpacity(0.12);
+    Color railColor = themeColor.withOpacity(0.3);
+    Color innerColor = const Color(0xFF0F0F1A);
+
+    final glowPaint = Paint()
+      ..color = glowColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 46.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
+    canvas.drawPath(path, glowPaint);
+
+    final railPaint = Paint()
+      ..color = railColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 40.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(path, railPaint);
+
+    final innerPaint = Paint()
+      ..color = innerColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 34.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(path, innerPaint);
+
+    cachedTrackPicture = recorder.endRecording();
+  }
+
   void _loadLevel(int levelNum) {
     currentLevelNumber = levelNum;
     final levels = LevelConfig.defaultLevels;
@@ -143,6 +195,8 @@ class GameController extends ChangeNotifier {
     pathPoints = PathManager.generateSmoothPath(currentLevelConfig.scaledControlPoints);
     pathDistances = PathManager.computeCumulativeDistances(pathPoints);
     totalPathLength = pathDistances.isNotEmpty ? pathDistances.last : 0.0;
+
+    _generateTrackPathAndPicture();
 
     // Generate color pool
     _generateLevelColorPool();
@@ -226,6 +280,7 @@ class GameController extends ChangeNotifier {
   @override
   void dispose() {
     _ticker?.dispose();
+    tickNotifier.dispose();
     super.dispose();
   }
 
@@ -302,7 +357,8 @@ class GameController extends ChangeNotifier {
       }
     }
 
-    _safeNotifyListeners();
+    // Notify the canvas to repaint
+    tickNotifier.value = totalElapsedTime;
   }
 
   void _updateIntro(double dt) {
@@ -408,6 +464,7 @@ class GameController extends ChangeNotifier {
         state = GameState.gameOver;
         _ticker?.stop();
         _createGameOverExplosion();
+        _safeNotifyListeners();
       }
     }
   }
@@ -545,10 +602,12 @@ class GameController extends ChangeNotifier {
       // Reset Box with a new target color
       final newColor = _getRandomActiveColor(choosingNew: true);
       box!.reset(newColor);
+      _safeNotifyListeners(); // Notify UI of score/box update
     } else {
       // Normal hit: spark burst
       _createHitSparks(ball.endPosition, ball.color);
       HapticFeedback.mediumImpact();
+      _safeNotifyListeners(); // Notify UI of score update
     }
   }
 

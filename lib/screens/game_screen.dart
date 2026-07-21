@@ -32,7 +32,7 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Provider.of<GameController>(context);
+    final controller = Provider.of<GameController>(context, listen: false);
 
     return Scaffold(
       backgroundColor: GameConstants.obsidianBg,
@@ -55,9 +55,13 @@ class _GameScreenState extends State<GameScreen> {
             children: [
               // Theme Background Image
               Positioned.fill(
-                child: Image.asset(
-                  "assets/images/themes/${controller.currentTheme}.png",
-                  fit: BoxFit.cover,
+                child: Consumer<GameController>(
+                  builder: (context, c, child) {
+                    return Image.asset(
+                      "assets/images/themes/${c.currentTheme}.png",
+                      fit: BoxFit.cover,
+                    );
+                  },
                 ),
               ),
               // Interactive Canvas area (centered)
@@ -77,9 +81,14 @@ class _GameScreenState extends State<GameScreen> {
                     controller.handleTap(logicalTapPos);
                   },
                   child: ClipRect(
-                    child: CustomPaint(
-                      size: Size(canvasWidth, canvasHeight),
-                      painter: GamePainter(controller: controller),
+                    child: AnimatedBuilder(
+                      animation: controller.tickNotifier,
+                      builder: (context, _) {
+                        return CustomPaint(
+                          size: Size(canvasWidth, canvasHeight),
+                          painter: GamePainter(controller: controller),
+                        );
+                      },
                     ),
                   ),
                 ),
