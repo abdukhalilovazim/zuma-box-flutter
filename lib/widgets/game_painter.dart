@@ -67,11 +67,6 @@ class GamePainter extends CustomPainter {
       ..strokeWidth = 3.0;
     canvas.drawCircle(startPos, 18.0, spawnBorder);
 
-    final themeColor = GameConstants.getLevelColor(
-      controller.currentLevelNumber - 1,
-      theme: controller.currentTheme,
-    );
-
     // Calculate warning path color shift (when chain is near the box)
     double warningIntensity = 0.0;
     if (controller.activeBalls.isNotEmpty) {
